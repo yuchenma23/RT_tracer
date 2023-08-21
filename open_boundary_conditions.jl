@@ -17,41 +17,41 @@ end
         n₁   = Int(floor(n))
 
         if n₁ == n
-            return getindex(t.time_array, n₁, idx...)
+            return getindex(t.time_array, idx..., n₁)
         end
         n₂ = Int(n₁ + 1)
 
-        return getindex(t.time_array, n₁, idx...) * (n₂ - n) + getindex(t.time_array, n₂, idx...) * (n - n₁)
+        return getindex(t.time_array, idx..., n₁) * (n₂ - n) + getindex(t.time_array, idx..., n₂) * (n - n₁)
     end
 end
 
-@inline getbc(bc::BC{<:Open,  <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[clock, i, j]
-@inline getbc(bc::BC{<:Value, <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[clock, i, j]
+@inline getbc(bc::BC{<:Open,  <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[i, j, clock]
+@inline getbc(bc::BC{<:Value, <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[i, j, clock]
 
 function set_boundary_conditions(grid; Nt = 30)
 
     Nx, Ny, Nz = size(grid)
     arch = architecture(grid)
 
-    u_west  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    u_east  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    u_south = arch_array(arch, zeros(Nt+1, Nx+1, Nz))
-    u_north = arch_array(arch, zeros(Nt+1, Nx+1, Nz))
+    u_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    u_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    u_south = arch_array(arch, zeros(Nx+1, Nz, Nt+1))
+    u_north = arch_array(arch, zeros(Nx+1, Nz, Nt+1))
 
-    v_west  = arch_array(arch, zeros(Nt+1, Ny+1, Nz))
-    v_east  = arch_array(arch, zeros(Nt+1, Ny+1, Nz))
-    v_south = arch_array(arch, zeros(Nt+1, Nx, Nz))
-    v_north = arch_array(arch, zeros(Nt+1, Nx, Nz))
+    v_west  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
+    v_east  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
+    v_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    v_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-    T_west  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    T_east  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    T_south = arch_array(arch, zeros(Nt+1, Nx, Nz))
-    T_north = arch_array(arch, zeros(Nt+1, Nx, Nz))
+    T_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    T_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    T_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    T_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-    S_west  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    S_east  = arch_array(arch, zeros(Nt+1, Ny, Nz))
-    S_south = arch_array(arch, zeros(Nt+1, Nx, Nz))
-    S_north = arch_array(arch, zeros(Nt+1, Nx, Nz))
+    S_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    S_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
+    S_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    S_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
     u_west_bc  =  OpenBoundaryCondition(TimeInterpolatedArray(u_west,  1day))
     u_east_bc  =  OpenBoundaryCondition(TimeInterpolatedArray(u_east,  1day))
@@ -83,7 +83,7 @@ function set_boundary_conditions(grid; Nt = 30)
 end
 
 @inline function relaxation_forcing(i, j, k, grid, clock, fields, p)
-    C★ = p.forcing[clock, i, j, k]
+    C★ = p.forcing[i, j, k, clock]
     C  = getproperty(fields, p.variable)[i, j, k]
     return 1 / p.λ * p.mask[i, j, k] * (C★ - C)
 end
@@ -93,10 +93,10 @@ function set_forcing(grid; Nt = 2)
 
     mask .= jldopen("mask.jld2")["mask"]
 
-    u_array = TimeInterpolatedArray(arch_array(arch, zeros(Nt+1, Nx, Ny, Nz)), 5days)
-    v_array = TimeInterpolatedArray(arch_array(arch, zeros(Nt+1, Nx, Ny, Nz)), 5days)
-    T_array = TimeInterpolatedArray(arch_array(arch, zeros(Nt+1, Nx, Ny, Nz)), 5days)
-    S_array = TimeInterpolatedArray(arch_array(arch, zeros(Nt+1, Nx, Ny, Nz)), 5days)
+    u_array = TimeInterpolatedArray(arch_array(arch, zeros(Nx, Ny, Nz, Nt+1)), 5days)
+    v_array = TimeInterpolatedArray(arch_array(arch, zeros(Nx, Ny, Nz, Nt+1)), 5days)
+    T_array = TimeInterpolatedArray(arch_array(arch, zeros(Nx, Ny, Nz, Nt+1)), 5days)
+    S_array = TimeInterpolatedArray(arch_array(arch, zeros(Nx, Ny, Nz, Nt+1)), 5days)
 
     u_forcing = Forcing(relaxation_forcing, discrete_form=true, parameters = (mask = mask, variable = :u, λ = 5days, forcing = u_array))
     v_forcing = Forcing(relaxation_forcing, discrete_form=true, parameters = (mask = mask, variable = :v, λ = 5days, forcing = v_array))
