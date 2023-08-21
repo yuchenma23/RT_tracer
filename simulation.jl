@@ -9,6 +9,8 @@ using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalD
 
 using MPI
 
+MPI.Init()
+
 include("open_boundary_conditions.jl")
 
 function read_from_binary(filename, Nx, Ny, Nz)
