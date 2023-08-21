@@ -41,7 +41,7 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                    halo = (7, 7, 7),
                                topology = topo)
 
-bottom = jldopen("RT_bathy_100.jld2")["bathymetry"]
+bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
 bottom = partition_global_array(architecture(grid), bottom, size(grid))
 
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
@@ -72,7 +72,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 @info "Diffusivity and Buoyancy"
 
-kappa = jldopen("RT_kappa_100th.jld2")["kappa"]
+kappa = jldopen("data/RT_kappa_100th.jld2")["kappa"]
 
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 
@@ -111,7 +111,7 @@ model = HydrostaticFreeSurfaceModel(; grid,
 
 @info "Setting initial conditions"
 
-file_init = jldopen("initial_conditions.jld2")
+file_init = jldopen("data/RT_initial_conditions_100th.jld2")
 
 u, v, w = model.velocities
 T, S, c = model.tracers
