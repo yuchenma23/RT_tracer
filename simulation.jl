@@ -1,9 +1,13 @@
 using Oceananigans
 using Oceananigans.Units
+using Oceananigans.Distributed
+using Oceananigans.Distributed: partition_global_array
 using JLD2 
 using Printf
 using SeawaterPolynomials
 using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalDiffusivity
+
+using MPI
 
 include("open_boundary_conditions.jl")
 
@@ -16,15 +20,17 @@ function read_from_binary(filename, Nx, Ny, Nz)
     return reverse(arr, dims = 3)
 end
 
-
 #####
 ##### Specifying domain, grid and bathymetry
 #####
-#=
+
 @info "Creating the GPU grid"
 
-arch = GPU()
-Nx = 700
+Nranks = MPI.Comm_size(MPI.COMM_WORLD)
+topo  = (Bounded, Bounded, Bounded)
+
+arch = DistributedArch(GPU(); ranks = (Nranks, 1, 1), topology = topo, )
+Nx = 700 ÷ Nranks
 Ny = 500
 Nz = 350
 
@@ -33,9 +39,10 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                               longitude = (-16.3, -9.3), 
                                       z = (-3500, 0),
                                    halo = (7, 7, 7),
-                               topology = (Bounded, Bounded, Bounded))
+                               topology = topo)
 
 bottom = jldopen("RT_bathy_100.jld2")["bathymetry"]
+bottom = partition_global_array(architecture(grid), bottom, size(grid))
 
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
@@ -80,7 +87,7 @@ buoyancy = SeawaterBuoyancy(; equation_of_state)
 ##### Boundary conditions and forcing
 #####
 
-boundary_conditions = set_boundary_conditions()
+boundary_conditions = set_boundary_conditions(grid)
 forcing             = set_forcing()
 
 #####
@@ -98,7 +105,7 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       forcing,
                                       tracers = (:T, :S, :c),
                                       free_surface)
-=#
+
 @info "Setting initial conditions"
 
 file_init = jldopen("initial_conditions.jld2")
@@ -109,14 +116,14 @@ T, S, c = model.tracers
 u_init = zeros(size(u))
 v_init = zeros(size(v))
 
-u_init[1:end-1, :, :] .= file_init["u"]
-v_init[:, 1:end-1, :] .= file_init["v"]
+u_init[1:end-1, :, :] .= partition_global_array(arch, file_init["u"], size(T)) 
+v_init[:, 1:end-1, :] .= partition_global_array(arch, file_init["v"], size(T))
 
 set!(u, u_init)
 set!(v, v_init)
-set!(T, file_init["T"])
-set!(S, file_init["S"])
-set!(c, file_init["c"])
+set!(T, partition_global_array(arch, file_init["T"], size(T)))
+set!(S, partition_global_array(arch, file_init["S"], size(S)))
+set!(c, partition_global_array(arch, file_init["c"], size(c)))
 
 #####
 ##### Simulation and Diagnostics
