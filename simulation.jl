@@ -21,6 +21,8 @@ end
 ##### Specifying domain, grid and bathymetry
 #####
 
+@info "Creating the GPU grid"
+
 arch = GPU()
 Nx = 700
 Ny = 500
@@ -42,6 +44,8 @@ grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom); active_cells_map = t
 ##### Numerics 
 #####
 
+@info "Defining numerics"
+
 fixed_Δt = 50
 
 momentum_advection = VectorInvariant(vorticity_scheme = WENO(; order = 9), 
@@ -58,6 +62,8 @@ coriolis = HydrostaticSphericalCoriolis()
 #####
 ##### Physics
 #####
+
+@info "Diffusivity and Buoyancy"
 
 kappa = jldopen("RT_kappa_100th.jld2")["kappa"]
 
@@ -81,6 +87,8 @@ forcing             = set_forcing()
 ##### Model construction and initialization
 #####
 
+@info "Allocating the model"
+
 model = HydrostaticFreeSurfaceModel(; grid, 
                                       momentum_advection,
                                       tracer_advection,
@@ -90,6 +98,8 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       forcing,
                                       tracers = (:T, :S, :c),
                                       free_surface)
+
+@info "Setting initial conditions"
 
 file_init = jldopen("initial_conditions.jld2")
 
@@ -137,6 +147,8 @@ simulation.output_writer[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c)
                                                      filename = "RT_tracer_fields",
                                                      overwrite_existing = true,
                                                      with_halos = true)
+
+@info "Ready to run!!!"
 
 # Let's RUN!!!set
 run!(simulation)
