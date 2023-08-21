@@ -87,8 +87,11 @@ buoyancy = SeawaterBuoyancy(; equation_of_state)
 ##### Boundary conditions and forcing
 #####
 
-boundary_conditions = set_boundary_conditions(grid)
-forcing             = set_forcing()
+chunk_size_boundary = 30
+chunk_size_forcing  = 4
+
+boundary_conditions = NamedTuple() # set_boundary_conditions(grid; Nt = chunk_size)
+forcing             = NamedTuple() # set_forcing(grid; Nt = chunk_size_forcing)
 
 #####
 ##### Model construction and initialization
@@ -160,6 +163,9 @@ simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c
                                                       filename = "RT_tracer_fields",
                                                       overwrite_existing = true,
                                                       with_halos = true)
+
+# simulation.callbacks[:update_boundary] = Callback(update_boundary_conditions!, TimeInterval(chunk_size_boundary*days))
+# simulation.callbacks[:update_forcing]  = Callback(update_forcing!, TimeInterval(chunk_size_forcing*5days))
 
 @info "Ready to run!!!"
 
