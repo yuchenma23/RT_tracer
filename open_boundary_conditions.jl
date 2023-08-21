@@ -103,11 +103,11 @@ function set_forcing(grid; Nt = 2)
     T_forcing = Forcing(relaxation_forcing, discrete_form=true, parameters = (mask = mask, variable = :T, λ = 5days, forcing = T_array))
     S_forcing = Forcing(relaxation_forcing, discrete_form=true, parameters = (mask = mask, variable = :S, λ = 5days, forcing = S_array))
 
-    return NamedTuple()
+    return (u = u_forcing, v = v_forcing, T = T_forcing, S = S_forcing)
 end
 
 function fill_boundaries!(var, data)
-    
+
     west  = var.boundary_conditions.west.condition.time_array
     east  = var.boundary_conditions.east.condition.time_array
     south = var.boundary_conditions.south.condition.time_array
