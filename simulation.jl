@@ -5,6 +5,8 @@ using Printf
 using SeawaterPolynomials
 using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalDiffusivity
 
+include("open_boundary_conditions.jl")
+
 function read_from_binary(filename, Nx, Ny, Nz)
     arr = zeros(Float32, Nx*Ny*Nz)
     read!(filename, arr)
@@ -72,7 +74,8 @@ buoyancy = SeawaterBuoyancy(; equation_of_state)
 ##### Boundary conditions and forcing
 #####
 
-
+boundary_conditions = set_boundary_conditions()
+forcing             = set_forcing()
 
 #####
 ##### Model construction and initialization
@@ -83,6 +86,8 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       tracer_advection,
                                       coriolis,
                                       buoyancy,
+                                      boundary_conditions,
+                                      forcing,
                                       tracers = (:T, :S, :c),
                                       free_surface)
 
@@ -133,5 +138,5 @@ simulation.output_writer[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c)
                                                      overwrite_existing = true,
                                                      with_halos = true)
 
-# Let's RUN!!!
+# Let's RUN!!!set
 run!(simulation)
