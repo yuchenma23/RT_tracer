@@ -115,9 +115,9 @@ function print_progress(simulation)
     u, v, w = model.velocities
     T, S, c = model.tracers
 
-    exec_time = (time_ns() - wall_time[]) * 1e9
+    exec_time = (time_ns() - wall_time[]) * 1e-9
 
-    @sprintf("Iteration %d, wall_time %.2f, max(|u|, |v|, |w|): %.2f, %.2f, %.2f, max(T, S, c): %2.f, %.2f, %2.f\n", 
+    @info @sprintf("Iteration %d, wall_time %.2f, max(|u|, |v|, |w|): %.2f, %.2f, %.2f, max(T, S, c): %2.f, %.2f, %2.f\n", 
             model.clock.iteration, exec_time, maximum(abs, u), maximum(abs, v), maximum(abs, w), 
             maximum(T), maximum(S), maximum(c))
     
