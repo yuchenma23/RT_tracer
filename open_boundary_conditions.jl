@@ -41,6 +41,6 @@ function set_boundary_conditions()
     return NamedTuple()
 end
 
-function set_forcings()
+function set_forcing()
     return NamedTuple()
 end

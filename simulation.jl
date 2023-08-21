@@ -20,7 +20,7 @@ end
 #####
 ##### Specifying domain, grid and bathymetry
 #####
-
+#=
 @info "Creating the GPU grid"
 
 arch = GPU()
@@ -32,12 +32,12 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                latitude = (53, 58), 
                               longitude = (-16.3, -9.3), 
                                       z = (-3500, 0),
-                                   halo = (6, 6, 6),
+                                   halo = (7, 7, 7),
                                topology = (Bounded, Bounded, Bounded))
 
 bottom = jldopen("RT_bathy_100.jld2")["bathymetry"]
 
-grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom); active_cells_map = true)
+grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
 
 #####
@@ -98,7 +98,7 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       forcing,
                                       tracers = (:T, :S, :c),
                                       free_surface)
-
+=#
 @info "Setting initial conditions"
 
 file_init = jldopen("initial_conditions.jld2")
@@ -106,8 +106,14 @@ file_init = jldopen("initial_conditions.jld2")
 u, v, w = model.velocities
 T, S, c = model.tracers
 
-set!(u, file_init["u"])
-set!(v, file_init["v"])
+u_init = zeros(size(u))
+v_init = zeros(size(v))
+
+u_init[1:end-1, :, :] .= file_init["u"]
+v_init[:, 1:end-1, :] .= file_init["v"]
+
+set!(u, u_init)
+set!(v, v_init)
 set!(T, file_init["T"])
 set!(S, file_init["S"])
 set!(c, file_init["c"])
@@ -121,7 +127,7 @@ simulation = Simulation(model; Δt = fixed_Δt, stop_time = 365days)
 wall_time = Ref(time_ns())
 
 function print_progress(simulation)
-    model = simulation
+    model = simulation.model
     u, v, w = model.velocities
     T, S, c = model.tracers
 
@@ -138,15 +144,15 @@ end
 
 simulation.callbacks[:progress] = Callback(print_progress, IterationInterval(20))
 
-simulation.output_writer[:checkpointer] = Checkpointer(model; schedule = TimeInterval(30days),
-                                                       prefix = "RT_tracer_checkpoint",
-                                                       overwrite_existing = true)
+simulation.output_writers[:checkpointer] = Checkpointer(model; schedule = TimeInterval(30days),
+                                                        prefix = "RT_tracer_checkpoint",
+                                                        overwrite_existing = true)
 
-simulation.output_writer[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c);
-                                                     schedule = TimeInterval(day),
-                                                     filename = "RT_tracer_fields",
-                                                     overwrite_existing = true,
-                                                     with_halos = true)
+simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c);
+                                                      schedule = TimeInterval(day),
+                                                      filename = "RT_tracer_fields",
+                                                      overwrite_existing = true,
+                                                      with_halos = true)
 
 @info "Ready to run!!!"
 
