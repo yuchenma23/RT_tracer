@@ -9,7 +9,7 @@ using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalD
 
 using MPI
 
-MPI.Init()
+const using_MPI = false
 
 include("open_boundary_conditions.jl")
 
@@ -26,12 +26,22 @@ end
 ##### Specifying domain, grid and bathymetry
 #####
 
+@inline partition_array(arch::DistributedArch, array, size) = partition_global_array(arch, array, size)
+@inline partition_array(arch, array, size) = array
+
 @info "Creating the GPU grid"
 
-Nranks = MPI.Comm_size(MPI.COMM_WORLD)
-topo  = (Bounded, Bounded, Bounded)
+topo = (Bounded, Bounded, Bounded)
 
-arch = DistributedArch(GPU(); ranks = (Nranks, 1, 1), topology = topo, )
+if using_MPI
+    MPI.Init()
+    Nranks = MPI.Comm_size(MPI.COMM_WORLD)
+    arch = DistributedArch(GPU(); ranks = (Nranks, 1, 1), topology = topo)
+else
+    Nranks = 1
+    arch = GPU()
+end
+
 Nx = 700 ÷ Nranks
 Ny = 500
 Nz = 350
@@ -44,7 +54,7 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                topology = topo)
 
 bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
-bottom = partition_global_array(architecture(grid), bottom, size(grid))
+bottom = partition_array(architecture(grid), bottom, size(grid))
 
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
@@ -121,14 +131,14 @@ T, S, c = model.tracers
 u_init = zeros(size(u))
 v_init = zeros(size(v))
 
-u_init[1:end-1, :, :] .= partition_global_array(arch, file_init["u"], size(T)) 
-v_init[:, 1:end-1, :] .= partition_global_array(arch, file_init["v"], size(T))
+u_init[1:end-1, :, :] .= partition_array(arch, file_init["u"], size(T)) 
+v_init[:, 1:end-1, :] .= partition_array(arch, file_init["v"], size(T))
 
 set!(u, u_init)
 set!(v, v_init)
-set!(T, partition_global_array(arch, file_init["T"], size(T)))
-set!(S, partition_global_array(arch, file_init["S"], size(S)))
-set!(c, partition_global_array(arch, file_init["c"], size(c)))
+set!(T, partition_array(arch, file_init["T"], size(T)))
+set!(S, partition_array(arch, file_init["S"], size(S)))
+set!(c, partition_array(arch, file_init["c"], size(c)))
 
 #####
 ##### Simulation and Diagnostics
