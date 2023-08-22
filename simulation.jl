@@ -143,11 +143,11 @@ T, S, c = model.tracers
 u_init = zeros(size(u))
 v_init = zeros(size(v))
 
-u_init[1:end-1, :, :] .= partition_array(arch, file_init["u"], size(T)) 
-v_init[:, 1:end-1, :] .= partition_array(arch, file_init["v"], size(T))
+# u_init[1:end-1, :, :] .= 
+# v_init[:, 1:end-1, :] .= partition_array(arch, file_init["v"], size(T))
 
-set!(u, u_init)
-set!(v, v_init)
+# set!(u, u_init)
+# set!(v, v_init)
 set!(T, partition_array(arch, file_init["T"], size(T)))
 set!(S, partition_array(arch, file_init["S"], size(S)))
 set!(c, partition_array(arch, file_init["c"], size(c)))
