@@ -21,6 +21,7 @@ using Oceananigans.Grids: architecture
 
 
 include("open_boundary_conditions.jl")
+include("grid_load_balance.jl")
 
 function read_from_binary(filename, Nx, Ny, Nz)
     arr = zeros(Float32, Nx*Ny*Nz)
@@ -54,22 +55,13 @@ else
     arch = GPU()
 end
 
-Nx = 700 ÷ Nranks
+# grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
+
+Nx = 700
 Ny = 500
 Nz = 350
 
-grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
-                               latitude = (53, 58), 
-                              longitude = (-16.3, -9.3), 
-                                      z = (-3500, 0),
-                                   halo = (7, 7, 7),
-                               topology = topo)
-
-bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
-bottom = partition_array(arch, bottom, size(grid))
-
-grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
-# grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
+grid = grid_load_balance(arch, Nx, Ny, Nz, topo)
 
 #####
 ##### Numerics 
