@@ -1,0 +1,126 @@
+
+The following have been reloaded with a version change:
+  1) cuda/11.4 => cuda/11.4-5ncz6p4
+
+┌ Warning: CUDA runtime library libcublasLt.so.11 was loaded from a system path. This may cause errors.
+│ Ensure that you have not set the LD_LIBRARY_PATH environment variable, or that it does not contain paths to CUDA libraries.
+└ @ CUDA /nobackup/users/yuchenma/depot/packages/CUDA/tVtYo/src/initialization.jl:173
+┌ Warning: CUDA runtime library libcublasLt.so.11 was loaded from a system path. This may cause errors.
+│ Ensure that you have not set the LD_LIBRARY_PATH environment variable, or that it does not contain paths to CUDA libraries.
+└ @ CUDA /nobackup/users/yuchenma/depot/packages/CUDA/tVtYo/src/initialization.jl:173
+┌ Warning: CUDA runtime library libcublasLt.so.11 was loaded from a system path. This may cause errors.
+│ Ensure that you have not set the LD_LIBRARY_PATH environment variable, or that it does not contain paths to CUDA libraries.
+└ @ CUDA /nobackup/users/yuchenma/depot/packages/CUDA/tVtYo/src/initialization.jl:173
+┌ Warning: CUDA runtime library libcublasLt.so.11 was loaded from a system path. This may cause errors.
+│ Ensure that you have not set the LD_LIBRARY_PATH environment variable, or that it does not contain paths to CUDA libraries.
+└ @ CUDA /nobackup/users/yuchenma/depot/packages/CUDA/tVtYo/src/initialization.jl:173
+[ Info: Creating the GPU grid
+[ Info: Creating the GPU grid
+[ Info: Creating the GPU grid
+[ Info: Creating the GPU grid
+slurmstepd: error: *** STEP 347189.0 ON node0019 CANCELLED AT 2023-08-21T17:06:11 ***
+
+[2301053] signal (15): Terminated
+in expression starting at /nobackup/users/yuchenma/RT_tracer/simulation.jl:49
+
+[2301054] signal (15): Terminated
+in expression starting at /nobackup/users/yuchenma/RT_tracer/simulation.jl:49
+epoll_wait at /lib64/power9/libc.so.6 (unknown line)
+epoll_wait at /lib64/power9/libc.so.6 (unknown line)
+uv__io_poll at /workspace/srcdir/libuv/src/unix/epoll.c:236
+uv_run at /workspace/srcdir/libuv/src/unix/core.c:400
+ijl_task_get_next at /nobackup/users/yuchenma/julia/src/partr.c:390
+unknown function (ip: (nil))
+Allocations: 26540416 (Pool: 26523969; Big: 16447); GC: 40
+slurmstepd: error: *** JOB 347189 ON node0019 CANCELLED AT 2023-08-21T17:06:11 ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+
+[2301051] signal (15): Terminated
+in expression starting at /nobackup/users/yuchenma/RT_tracer/simulation.jl:49
+uv__io_poll at /workspace/srcdir/libuv/src/unix/epoll.c:236
+uv_run at /workspace/srcdir/libuv/src/unix/core.c:400
+ijl_task_get_next at /nobackup/users/yuchenma/julia/src/partr.c:390
+unknown function (ip: (nil))
+Allocations: 26540416 (Pool: 26523969; Big: 16447); GC: 40
+
+[2301052] signal (15): Terminated
+in expression starting at /nobackup/users/yuchenma/RT_tracer/simulation.jl:49
+jl_f_isdefined at /nobackup/users/yuchenma/julia/src/builtins.c:1130
+maybe_get_const_prop_profitable at ./compiler/abstractinterpretation.jl:1038
+unknown function (ip: (nil))
+Allocations: 25878513 (Pool: 25862225; Big: 16288); GC: 38
+[node0019:2301052:0:2301052] Caught signal 11 (Segmentation fault: invalid permissions for mapped object at address 0x200005af0000)
+==== backtrace (tid:2301052) ====
+ 0  /home/software.ppc64le/spack/v0.16.2/spack/opt/spack/linux-rhel8-power9le/gcc-8.3.1/ucx-1.9.0-55pjrj235taij6d3efkzk7yoznld3up2/lib/libucs.so.0(ucs_handle_error+0x324) [0x200aadeaca34]
+ 1  /home/software.ppc64le/spack/v0.16.2/spack/opt/spack/linux-rhel8-power9le/gcc-8.3.1/ucx-1.9.0-55pjrj235taij6d3efkzk7yoznld3up2/lib/libucs.so.0(+0x2cbe0) [0x200aadeacbe0]
+ 2  /home/software.ppc64le/spack/v0.16.2/spack/opt/spack/linux-rhel8-power9le/gcc-8.3.1/ucx-1.9.0-55pjrj235taij6d3efkzk7yoznld3up2/lib/libucs.so.0(+0x2d010) [0x200aadead010]
+ 3  linux-vdso64.so.1(__kernel_sigtramp_rt64+0) [0x2000000504d8]
+ 4  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_atexit_hook+0x124) [0x2000008d4434]
+ 5  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(+0xd6740) [0x200000936740]
+ 6  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(+0xd4294) [0x200000934294]
+ 7  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(+0xd45e4) [0x2000009345e4]
+ 8  linux-vdso64.so.1(__kernel_sigtramp_rt64+0) [0x2000000504d8]
+ 9  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(+0xbfb30) [0x20000091fb30]
+10  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(+0xc3ee0) [0x200000923ee0]
+11  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_gc_collect+0x404) [0x200000926234]
+12  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(jl_gc_alloc+0xac) [0x2000009276dc]
+13  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_alloc_array_1d+0x254) [0x2000008d9744]
+14  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x7fa084) [0x20000b70a084]
+15  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x7f80b0) [0x20000b7080b0]
+16  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x80da58) [0x20000b71da58]
+17  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x80c0ac) [0x20000b71c0ac]
+18  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x819528) [0x20000b729528]
+19  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x6167b0) [0x20000b5267b0]
+20  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x6162ec) [0x20000b5262ec]
+21  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x83a26c) [0x20000b74a26c]
+22  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x8039e0) [0x20000b7139e0]
+23  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x808178) [0x20000b718178]
+24  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x632024) [0x20000b542024]
+25  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x630724) [0x20000b540724]
+26  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x7f0574) [0x20000b700574]
+27  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x835804) [0x20000b745804]
+28  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9e78b8) [0x20000b8f78b8]
+29  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x67bc8) [0x20000af77bc8]
+30  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x692fc) [0x20000af792fc]
+31  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_invoke+0xb4) [0x2000008aa054]
+32  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9e661c) [0x20000b8f661c]
+33  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9e6558) [0x20000b8f6558]
+34  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9e5bb4) [0x20000b8f5bb4]
+35  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9f3f68) [0x20000b903f68]
+36  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x670dc) [0x20000af770dc]
+37  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x692fc) [0x20000af792fc]
+38  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_invoke+0xb4) [0x2000008aa054]
+39  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x8379fc) [0x20000b7479fc]
+40  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x837938) [0x20000b747938]
+41  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x83744c) [0x20000b74744c]
+42  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x82474c) [0x20000b73474c]
+43  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x825714) [0x20000b735714]
+44  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x6418dc) [0x20000b5518dc]
+45  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x640ff4) [0x20000b550ff4]
+46  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x7f2df8) [0x20000b702df8]
+47  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x80866c) [0x20000b71866c]
+48  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x631a9c) [0x20000b541a9c]
+49  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x630724) [0x20000b540724]
+50  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x7f0574) [0x20000b700574]
+51  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x835804) [0x20000b745804]
+52  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x9e78b8) [0x20000b8f78b8]
+53  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x67bc8) [0x20000af77bc8]
+54  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x692fc) [0x20000af792fc]
+55  /nobackup/users/yuchenma/julia/usr/bin/../lib/libjulia-internal.so.1(ijl_invoke+0xb4) [0x2000008aa054]
+56  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x8379fc) [0x20000b7479fc]
+57  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x837938) [0x20000b747938]
+58  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x83744c) [0x20000b74744c]
+59  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x82474c) [0x20000b73474c]
+60  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x825714) [0x20000b735714]
+61  /nobackup/users/yuchenma/julia/usr/lib/julia/sys.so(+0x6418dc) [0x20000b5518dc]
+=================================
+
+[2301052] signal (11.-6): Segmentation fault
+in expression starting at /nobackup/users/yuchenma/RT_tracer/simulation.jl:49
+jl_gc_state_set at /nobackup/users/yuchenma/julia/src/julia_threads.h:349 [inlined]
+jl_gc_state_set at /nobackup/users/yuchenma/julia/src/julia_threads.h:342 [inlined]
+jl_gc_state_save_and_set at /nobackup/users/yuchenma/julia/src/julia_threads.h:355 [inlined]
+ijl_atexit_hook at /nobackup/users/yuchenma/julia/src/init.c:267
+jl_exit_thread0_cb at /nobackup/users/yuchenma/julia/src/signals-unix.c:470
+Allocations: 25878513 (Pool: 25862225; Big: 16288); GC: 38
+srun: error: node0019: tasks 2-3: Terminated
