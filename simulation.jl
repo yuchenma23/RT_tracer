@@ -1,3 +1,11 @@
+using MPI
+
+const using_MPI = true
+
+if using_MPI
+    MPI.Init()
+end
+
 using Oceananigans
 using Oceananigans.Units
 using Oceananigans.Distributed
@@ -6,14 +14,11 @@ using JLD2
 using Printf
 using SeawaterPolynomials
 using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalDiffusivity
-
-using MPI
-
+using Oceananigans.Grids: architecture
 
 #Yuchen's first change to the code
 #Yuchen's second change to the code
 
-const using_MPI = false
 
 include("open_boundary_conditions.jl")
 
@@ -40,11 +45,12 @@ end
 topo = (Bounded, Bounded, Bounded)
 
 if using_MPI
-    MPI.Init()
     Nranks = MPI.Comm_size(MPI.COMM_WORLD)
+    rank = MPI.Comm_rank(MPI.COMM_WORLD)
     arch = DistributedArch(GPU(); ranks = (Nranks, 1, 1), topology = topo)
 else
     Nranks = 1
+    rank = 0
     arch = GPU()
 end
 
@@ -60,7 +66,7 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                topology = topo)
 
 bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
-bottom = partition_array(architecture(grid), bottom, size(grid))
+bottom = partition_array(arch, bottom, size(grid))
 
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
@@ -90,7 +96,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 @info "Diffusivity and Buoyancy"
 
-kappa = jldopen("data/RT_kappa_100th.jld2")["kappa"]
+kappa = partition_array(arch, jldopen("data/RT_kappa_100th.jld2")["kappa"], size(grid))
 
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 
@@ -173,12 +179,12 @@ end
 simulation.callbacks[:progress] = Callback(print_progress, IterationInterval(20))
 
 simulation.output_writers[:checkpointer] = Checkpointer(model; schedule = TimeInterval(30days),
-                                                        prefix = "RT_tracer_checkpoint",
+                                                        prefix = "RT_tracer_checkpoint_$(rank)",
                                                         overwrite_existing = true)
 
 simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c);
                                                       schedule = TimeInterval(day),
-                                                      filename = "RT_tracer_fields",
+                                                      filename = "RT_tracer_fields_$(rank)",
                                                       overwrite_existing = true,
                                                       with_halos = true)
 
