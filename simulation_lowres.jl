@@ -31,6 +31,14 @@ function read_from_binary(filename, Nx, Ny, Nz)
     return reverse(arr, dims = 3)
 end
 
+function read_from_binary_2d(filename, Nx, Ny)
+    arr = zeros(Float32, Nx*Ny)
+    read!(filename, arr)
+    arr = bswap.(arr) .|> Float64
+    return reshape(arr, Nx, Ny)
+
+end
+
 #####
 ##### Specifying domain, grid and bathymetry
 #####
@@ -54,7 +62,8 @@ else
     arch = GPU()
 end
 
-Nx = 350 ÷ Nranks
+Nx_tot = 350
+Nx = Nx_tot ÷ Nranks
 Ny = 250
 Nz = 175
 
@@ -65,8 +74,7 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                    halo = (7, 7, 7),
                                topology = topo)
 
-bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
-bottom = partition_array(arch, bottom, size(grid))
+bottom = partition_array(arch, read_from_binary_2d("data/RT_bathy_50th",Nx_tot,Ny), size(grid))
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
 
@@ -76,7 +84,7 @@ grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 
 @info "Defining numerics"
 
-fixed_Δt = 50
+fixed_Δt = 100
 
 momentum_advection = VectorInvariant(vorticity_scheme = WENO(; order = 9), 
                                       vertical_scheme = WENO(),
@@ -95,10 +103,11 @@ coriolis = HydrostaticSphericalCoriolis()
 
 @info "Diffusivity and Buoyancy"
 
-kappa = partition_array(arch, jldopen("data/RT_kappa_100th.jld2")["kappa"], size(grid))
 
+
+
+kappa = partition_array(arch, read_from_binary("data/RT_bathy_50th",Nx_tot,Ny,Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
-
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
 # convective_adjustment = CATKEVerticalDiffusivity() 
@@ -134,8 +143,6 @@ model = HydrostaticFreeSurfaceModel(; grid,
 
 @info "Setting initial conditions"
 
-file_init = jldopen("data/RT_initial_conditions_100th.jld2")
-
 u, v, w = model.velocities
 T, S, c = model.tracers
 
@@ -147,9 +154,11 @@ v_init = zeros(size(v))
 
 # set!(u, u_init)
 # set!(v, v_init)
-set!(T, partition_array(arch, file_init["T"], size(T)))
-set!(S, partition_array(arch, file_init["S"], size(S)))
-set!(c, partition_array(arch, file_init["c"], size(c)))
+set!(T, partition_array(arch, read_from_binary("data/TempInit_50th",Nx_tot,Ny,Nz), size(T)))
+set!(S, partition_array(arch, read_from_binary("data/SaltInit_50th",Nx_tot,Ny,Nz), size(S)))
+set!(c, partition_array(arch, read_from_binary("data/TracerIC_RT_50th.bin",Nx_tot,Ny,Nz), size(c)))
+
+
 
 #####
 ##### Simulation and Diagnostics
