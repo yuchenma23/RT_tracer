@@ -1,9 +1,10 @@
 using Oceananigans
 using Oceananigans.BoundaryConditions
 using Oceananigans.BoundaryConditions: Open, Value, BC
-
 import Oceananigans.BoundaryConditions: getbc
 import Base: getindex
+
+
 
 struct TimeInterpolatedArray{A, I} 
     time_array :: A
@@ -42,6 +43,8 @@ function set_boundary_conditions(grid; Nt = 30)
     v_east  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
     v_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
     v_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
+
+
 
     T_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     T_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
