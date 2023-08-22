@@ -9,6 +9,9 @@ using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalD
 
 using MPI
 
+
+#Yuchen's first change to the code
+
 const using_MPI = false
 
 include("open_boundary_conditions.jl")
@@ -25,6 +28,8 @@ end
 #####
 ##### Specifying domain, grid and bathymetry
 #####
+
+
 
 @inline partition_array(arch::DistributedArch, array, size) = partition_global_array(arch, array, size)
 @inline partition_array(arch, array, size) = array
