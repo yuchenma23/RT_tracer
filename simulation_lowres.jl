@@ -154,8 +154,8 @@ v_init = zeros(size(v))
 
 # set!(u, u_init)
 # set!(v, v_init)
-set!(T, partition_array(arch, read_from_binary("data/TempInit_50th",Nx_tot,Ny,Nz), size(T)))
-set!(S, partition_array(arch, read_from_binary("data/SaltInit_50th",Nx_tot,Ny,Nz), size(S)))
+set!(T, partition_array(arch, read_from_binary("data/RT_TempInit_50th",Nx_tot,Ny,Nz), size(T)))
+set!(S, partition_array(arch, read_from_binary("data/RT_SaltInit_50th",Nx_tot,Ny,Nz), size(S)))
 set!(c, partition_array(arch, read_from_binary("data/TracerIC_RT_50th.bin",Nx_tot,Ny,Nz), size(c)))
 
 
