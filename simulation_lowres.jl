@@ -106,7 +106,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 
 
-kappa = partition_array(arch, read_from_binary("data/RT_bathy_50th",Nx_tot,Ny,Nz), size(grid))
+kappa = partition_array(arch, read_from_binary("data/RT_kappa_50th",Nx_tot,Ny,Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
