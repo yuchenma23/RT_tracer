@@ -88,7 +88,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 @info "Diffusivity and Buoyancy"
 
-kappa = partition_array(arch, jldopen("data/RT_kappa_100th.jld2")["kappa"], size(grid))
+kappa = partition_array(arch, jldopen("./data/RT_kappa_100th.jld2")["kappa"], size(grid))
 
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 
