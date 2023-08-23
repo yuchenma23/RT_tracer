@@ -14,4 +14,4 @@ exec \$*
 EoF_s
 chmod +x launch.sh
 
-srun --mpi=pmi2 ./launch.sh $JULIA --check-bounds=no --project simulation.jl
+srun --mpi=pmi2 ./launch.sh $JULIA --check-bounds=no --project simulation_lowres.jl
