@@ -171,12 +171,12 @@ end
 simulation.callbacks[:progress] = Callback(print_progress, IterationInterval(20))
 
 simulation.output_writers[:checkpointer] = Checkpointer(model; schedule = TimeInterval(30days),
-                                                        prefix = "RT_tracer_checkpoint_$(rank)",
+                                                        prefix = "Output_highres/RT_tracer_checkpoint_$(rank)",
                                                         overwrite_existing = true)
 
 simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c);
                                                       schedule = TimeInterval(day),
-                                                      filename = "RT_tracer_fields_$(rank)",
+                                                      filename = "Output_highres/RT_tracer_fields_$(rank)",
                                                       overwrite_existing = true,
                                                       with_halos = true)
 
