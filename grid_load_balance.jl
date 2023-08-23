@@ -2,6 +2,17 @@ using KernelAbstractions: @kernel, @index
 using Oceananigans: device
 using Oceananigans.Grids: immersed_cell
 
+
+
+function read_from_binary_2d(filename, Nx, Ny)
+    arr = zeros(Float32, Nx*Ny)
+    read!(filename, arr)
+    arr = bswap.(arr) .|> Float64
+    return reshape(arr, Nx, Ny)
+
+end
+
+
 function grid_load_balance(arch, Nx, Ny, Nz, topo)
     
     grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
@@ -11,7 +22,7 @@ function grid_load_balance(arch, Nx, Ny, Nz, topo)
                                     halo = (7, 7, 7),
                                 topology = topo)
 
-    bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
+    bottom = partition_array(arch, read_from_binary_2d("data/RT_bathy_100th",Nx,Ny), size(grid))
 
     return ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 end
@@ -25,7 +36,7 @@ function grid_load_balance(arch::DistributedArch, Nx, Ny, Nz, topo)
                                     halo = (7, 7, 7),
                                 topology = topo)
 
-    bottom = jldopen("data/RT_bathy_100th.jld2")["bathymetry"]
+    bottom = partition_array(arch, read_from_binary_2d("data/RT_bathy_100th",Nx,Ny), size(grid))
 
     grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 
@@ -40,7 +51,7 @@ function grid_load_balance(arch::DistributedArch, Nx, Ny, Nz, topo)
     N = (local_N[rank+1], Ny, Nz)
 
     @info "slab decomposition on" rank N
-      
+
     grid = LatitudeLongitudeGrid(arch; size = N,
                                 latitude = (53, 58), 
                                longitude = (-16.3, -9.3), 
@@ -48,7 +59,7 @@ function grid_load_balance(arch::DistributedArch, Nx, Ny, Nz, topo)
                                     halo = (7, 7, 7),
                                 topology = topo)
 
-    bottom = partition_array(arch, jldopen("data/RT_bathy_100th.jld2")["bathymetry"], size(grid))
+    bottom = partition_array(arch, read_from_binary_2d("data/RT_bathy_100th",Nx,Ny), size(grid))
 
     return ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 end

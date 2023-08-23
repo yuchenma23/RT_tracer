@@ -88,7 +88,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 @info "Diffusivity and Buoyancy"
 
-kappa = partition_array(arch, jldopen("./data/RT_kappa_100th.jld2")["kappa"], size(grid))
+kappa = partition_array(arch, read_from_binary("data/RT_kappa_50th",Nx_tot,Ny,Nz), size(grid))
 
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 
@@ -127,8 +127,6 @@ model = HydrostaticFreeSurfaceModel(; grid,
 
 @info "Setting initial conditions"
 
-file_init = jldopen("data/RT_initial_conditions_100th.jld2")
-
 u, v, w = model.velocities
 T, S, c = model.tracers
 
@@ -140,9 +138,11 @@ v_init = zeros(size(v))
 
 # set!(u, u_init)
 # set!(v, v_init)
-set!(T, partition_array(arch, file_init["T"], size(T)))
-set!(S, partition_array(arch, file_init["S"], size(S)))
-set!(c, partition_array(arch, file_init["c"], size(c)))
+set!(T, partition_array(arch, read_from_binary("data/RT_TempInit_100th",Nx_tot,Ny,Nz), size(T)))
+set!(S, partition_array(arch, read_from_binary("data/RT_SaltInit_100th",Nx_tot,Ny,Nz), size(S)))
+set!(c, partition_array(arch, read_from_binary("data/TracerIC_RT_100th.bin",Nx_tot,Ny,Nz), size(c)))
+
+
 
 #####
 ##### Simulation and Diagnostics
