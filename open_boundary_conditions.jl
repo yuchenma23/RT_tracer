@@ -4,8 +4,6 @@ using Oceananigans.BoundaryConditions: Open, Value, BC
 import Oceananigans.BoundaryConditions: getbc
 import Base: getindex
 
-
-
 struct TimeInterpolatedArray{A, I} 
     time_array :: A
     unit_time  :: I
