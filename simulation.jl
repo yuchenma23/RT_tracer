@@ -148,7 +148,7 @@ set!(c, partition_array(arch, read_from_binary("data/TracerIC_RT_100th.bin",Nx,N
 ##### Simulation and Diagnostics
 ##### 
 
-simulation = Simulation(model; Δt = fixed_Δt, stop_time = 365days)
+simulation = Simulation(model; Δt = fixed_Δt, stop_iteration=200)
 
 wall_time = Ref(time_ns())
 
