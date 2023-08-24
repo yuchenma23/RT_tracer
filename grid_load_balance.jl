@@ -46,7 +46,7 @@ function grid_load_balance(arch::DistributedArch, Nx, Ny, Nz, topo)
     loop! = assess_load!(Oceananigans.Architectures.device(GPU()), 512, Nx)
     loop!(load_per_slab, grid)
 
-    local_N = calculate_local_N(load_per_slab, N, arch)
+    local_N = calculate_local_N(load_per_slab, Nx, arch)
     rank    = MPI.Comm_rank(MPI.COMM_WORLD)
     
     N = (local_N[rank+1], Ny, Nz)

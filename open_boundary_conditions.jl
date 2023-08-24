@@ -11,8 +11,7 @@ end
 
 @inline function getindex(t::TimeInterpolatedArray{T, N},  clock::Clock, idx...) where {T, N}
     @inbounds begin
-        time = clock.time / t.unit_time
-        n    = mod(time, size(t.time_array, N) - 1) + 1
+        n = clock.time / t.unit_time +1
         n₁   = Int(floor(n))
 
         if n₁ == n
