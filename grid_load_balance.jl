@@ -1,5 +1,4 @@
 using KernelAbstractions: @kernel, @index
-using Oceananigans: device
 using Oceananigans.Grids: immersed_cell
 
 
