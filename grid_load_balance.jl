@@ -1,4 +1,5 @@
 using KernelAbstractions: @kernel, @index
+using KernelAbstractions.Extras.LoopInfo: @unroll
 using Oceananigans.ImmersedBoundaries: immersed_cell
 
 

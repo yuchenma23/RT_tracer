@@ -4,15 +4,15 @@ using Oceananigans.BoundaryConditions: Open, Value, BC
 import Oceananigans.BoundaryConditions: getbc
 import Base: getindex
 
-struct TimeInterpolatedArray{A, I} 
-    time_array :: A
+struct TimeInterpolatedArray{T, N, I} 
+    time_array :: AbstractArray{T, N}
     unit_time  :: I
 end
 
-@inline function getindex(t::TimeInterpolatedArray, clock::Clock, idx...)
+@inline function getindex(t::TimeInterpolatedArray{T, N},  clock::Clock, idx...) where {T, N}
     @inbounds begin
         time = clock.time / t.unit_time
-        n    = mod(time, size(t.time_array, 1) - 1) + 1
+        n    = mod(time, size(t.time_array, N) - 1) + 1
         n₁   = Int(floor(n))
 
         if n₁ == n
@@ -42,8 +42,6 @@ function set_boundary_conditions(grid; Nt = 30)
     v_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
     v_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-
-
     T_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     T_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     T_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
@@ -62,7 +60,7 @@ function set_boundary_conditions(grid; Nt = 30)
     v_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(v_west,  1day))
     v_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(v_east,  1day))
     v_south_bc =  OpenBoundaryCondition(TimeInterpolatedArray(v_south, 1day))
-    v_north_bc =  OpenBoundaryCondition(TimeInterpolatedArray(v_south, 1day))
+    v_north_bc =  OpenBoundaryCondition(TimeInterpolatedArray(v_north, 1day))
     
     u_bcs = FieldBoundaryConditions(west = u_west_bc, east = u_east_bc, south = u_south_bc, north = u_north_bc)
     v_bcs = FieldBoundaryConditions(west = v_west_bc, east = v_east_bc, south = v_south_bc, north = v_north_bc)
@@ -72,10 +70,10 @@ function set_boundary_conditions(grid; Nt = 30)
     T_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_north, 1day))
     T_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_south, 1day))
     
-    S_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(T_west,  1day))
-    S_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(T_east,  1day))
-    S_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_north, 1day))
-    S_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_south, 1day))
+    S_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(S_west,  1day))
+    S_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(S_east,  1day))
+    S_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(S_north, 1day))
+    S_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(S_south, 1day))
 
     T_bcs = FieldBoundaryConditions(west = T_west_bc, east = T_east_bc, south = T_south_bc, north = T_north_bc)
     S_bcs = FieldBoundaryConditions(west = S_west_bc, east = S_east_bc, south = S_south_bc, north = S_north_bc)
