@@ -1,5 +1,5 @@
 using KernelAbstractions: @kernel, @index
-using Oceananigans.Grids: immersed_cell
+using Oceananigans.ImmersedBoundaries: immersed_cell
 
 
 
