@@ -1,6 +1,6 @@
 using Oceananigans
 using Oceananigans.BoundaryConditions
-using Oceananigans.BoundaryConditions: Open, Value, BC
+using Oceananigans.BoundaryConditions: Open, Value, BC, DCBC
 import Oceananigans.BoundaryConditions: getbc
 import Base: getindex
 
@@ -12,7 +12,7 @@ end
 @inline function getindex(t::TimeInterpolatedArray{T, N},  clock::Clock, idx...) where {T, N}
     @inbounds begin
         n = clock.time / t.unit_time +1
-        n₁   = Int(floor(n))
+        n₁ = Int(floor(n))
 
         if n₁ == n
             return getindex(t.time_array, idx..., n₁)
@@ -80,7 +80,7 @@ function set_boundary_conditions(grid; Nt = 30)
     return (u = u_bcs, v = v_bcs, T = T_bcs, S = S_bcs)
 end
 
-@inline function relaxation_forcing(i, j, k, grid, clock, fields, p)
+#= @inline function relaxation_forcing(i, j, k, grid, clock, fields, p)
     C★ = p.forcing[i, j, k, clock]
     C  = getproperty(fields, p.variable)[i, j, k]
     return 1 / p.λ * p.mask[i, j, k] * (C★ - C)
@@ -102,19 +102,30 @@ function set_forcing(grid; Nt = 2)
     S_forcing = Forcing(relaxation_forcing, discrete_form=true, parameters = (mask = mask, variable = :S, λ = 5days, forcing = S_array))
 
     return (u = u_forcing, v = v_forcing, T = T_forcing, S = S_forcing)
-end
+end =#
 
 function fill_boundaries!(var, data)
 
-    west  = var.boundary_conditions.west.condition.time_array
-    east  = var.boundary_conditions.east.condition.time_array
-    south = var.boundary_conditions.south.condition.time_array
-    north = var.boundary_conditions.north.condition.time_array
+    # update BC only if not communicating
+    if !(var.boundary_conditions.west isa DCBC)
+        west  = var.boundary_conditions.west.condition.time_array
+        copyto!(west,  data.west)
+    end
 
-    copyto!(west,  data.west)
-    copyto!(east,  data.east)
-    copyto!(south, data.south)
-    copyto!(north, data.north)
+    if !(var.boundary_conditions.east isa DCBC)
+        east  = var.boundary_conditions.east.condition.time_array
+        copyto!(east,  data.east)
+    end
+
+    if !(var.boundary_conditions.south isa DCBC)
+        south  = var.boundary_conditions.south.condition.time_array
+        copyto!(south, data.south)
+    end
+    
+    if !(var.boundary_conditions.north isa DCBC)
+        north  = var.boundary_conditions.north.condition.time_array
+        copyto!(north, data.north)
+    end
 
     return nothing
 end
@@ -124,21 +135,32 @@ function update_boundary_conditions!(simulation)
     u, v, w = simulation.model.velocities
     T, S, c = simulation.model.tracers
 
+    # Decide what filename to load based on the clock (at the beginning just one file so open that!)
+
     @info "loading file $filename"
 
     file = jldopen(filename)
 
-    fill_boundaries!(u, file["u"])
-    fill_boundaries!(v, file["v"])
-    fill_boundaries!(T, file["T"])
-    fill_boundaries!(S, file["S"])
+    # Partition the boundary data accordingly to arch!
+    # Create the NamedTuple
+    # Example:
+    # data_u_west = extract_west(partition(read_from_binary(....)))
+    # data_u_east = extract_east(partition(read_from_binary(....)))
+    # bcs_u = (west = data_u_west, east = data_u_east, ....)
+    # fill_boundaries!(u, bcs_u)
+    
+    # Better way:
+    # Save all boundary conditions in .jld2 
+    # with file["u"].west, file["u"].east... and so forth
+    # and load with 
+    # fill_boundaries!(u, file["u"])
 
     GC.gc()
 
     return nothing
 end
 
-fill_forcing!(var, data) = copyto!(var.parameters.time_array, data)
+#= fill_forcing!(var, data) = copyto!(var.parameters.time_array, data)
 
 function update_forcing!(simulation)
 
@@ -155,3 +177,4 @@ function update_forcing!(simulation)
 
     return nothing
 end
+ =#

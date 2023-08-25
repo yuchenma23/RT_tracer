@@ -168,6 +168,8 @@ function print_progress(simulation)
     return nothing
 end
 
+update_boundary_conditions!(simulation)
+
 simulation.callbacks[:progress] = Callback(print_progress, IterationInterval(20))
 
 simulation.output_writers[:checkpointer] = Checkpointer(model; schedule = TimeInterval(30days),
@@ -187,3 +189,12 @@ simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c
 
 # Let's RUN!!!set
 run!(simulation)
+
+
+for time in 0:simulation.stop_time
+    time_step!(simulation.model, simulation.Δt)
+
+    if need_to_callback
+        execute_callback!(simulation)
+    end
+end
