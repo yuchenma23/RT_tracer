@@ -143,7 +143,7 @@ function update_boundary_conditions!(simulation)
 
     @info "loading file $filename"
 
-    file = jldopen(filename)
+    #file = jldopen(filename)
 
     # Partition the boundary data accordingly to arch!
     # Create the NamedTuple
@@ -185,6 +185,8 @@ function update_boundary_conditions!(simulation)
 
 
     #the function reallocate_uv puts the center grid to the face grid
+
+    
      bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
      bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_sourth)
      bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_sourth)

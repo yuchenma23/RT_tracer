@@ -104,7 +104,9 @@ buoyancy = SeawaterBuoyancy(; equation_of_state)
 chunk_size_boundary = 30
 chunk_size_forcing  = 4
 
-boundary_conditions = NamedTuple() # set_boundary_conditions(grid; Nt = chunk_size)
+#boundary_conditions = NamedTuple() # 
+
+set_boundary_conditions(grid; Nt = 30)
 forcing             = NamedTuple() # set_forcing(grid; Nt = chunk_size_forcing)
 
 #####
