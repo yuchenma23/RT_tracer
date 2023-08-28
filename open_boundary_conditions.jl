@@ -154,7 +154,7 @@ function update_boundary_conditions!(simulation)
     Nz = 175 
     
 
-    #needs some function to do some extrapolation, the 2D boundary files are currently 
+    
 
     set!(data_u_east, partition_array(arch, read_from_binary("data/RT_50thUvel_E";Ny=Ny,Nz=Nz), (Ny,Nz)))
     set!(data_u_west, partition_array(arch, read_from_binary("data/RT_50thUvel_W";Ny=Ny,Nz=Nz), (Ny,Nz)))
@@ -185,7 +185,9 @@ function update_boundary_conditions!(simulation)
     # data_u_east = extract_east(partition(read_from_binary(....)))
 
 
-    #the function reallocate_uv puts the center grid to the face grid
+
+
+    #the function reallocate_uv extrapolated the center grid to the face grid
 
 
      bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
