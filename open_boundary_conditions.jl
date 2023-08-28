@@ -171,30 +171,28 @@ function update_boundary_conditions!(simulation)
     data_S_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
     data_S_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-
-
-    set!(data_u_east, partition_array(arch, read_from_binary("data/RT_50thUvel_E";Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_u_west, partition_array(arch, read_from_binary("data/RT_50thUvel_W";Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_u_north,partition_array(arch, read_from_binary("data/RT_50thUvel_N";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
-    set!(data_u_south,partition_array(arch, read_from_binary("data/RT_50thUvel_S";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
+    data_u_east  = read_from_binary("data/RT_50thUvel_E";Ny=Ny,Nz=Nz,Nt=Nt+1)
+    data_u_west  = read_from_binary("data/RT_50thUvel_W";Ny=Ny,Nz=Nz,Nt=Nt+1)
+    data_u_north = partition_array(arch, read_from_binary("data/RT_50thUvel_N";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_u_south = partition_array(arch, read_from_binary("data/RT_50thUvel_S";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
 
     
-    set!(data_v_east, partition_array(arch, read_from_binary("data/RT_50thVvel_E"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_v_west, partition_array(arch, read_from_binary("data/RT_50thVvel_W"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_v_north,partition_array(arch, read_from_binary("data/RT_50thVvel_N"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
-    set!(data_v_south,partition_array(arch, read_from_binary("data/RT_50thVvel_S"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
+    data_v_east  = read_from_binary("data/RT_50thVvel_E"; Ny, Nz, Nt=Nt+1)
+    data_v_west  = read_from_binary("data/RT_50thVvel_W"; Ny, Nz, Nt=Nt+1)
+    data_v_north = partition_array(arch, read_from_binary("data/RT_50thVvel_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_v_south = partition_array(arch, read_from_binary("data/RT_50thVvel_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
 
 
-    set!(data_S_east, partition_array(arch, read_from_binary("data/RT_50thTemp_E"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_S_west, partition_array(arch, read_from_binary("data/RT_50thTemp_W"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_S_north,partition_array(arch, read_from_binary("data/RT_50thTemp_N"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
-    set!(data_S_south,partition_array(arch, read_from_binary("data/RT_50thTemp_S"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
+    data_S_east  = read_from_binary("data/RT_50thTemp_E"; Ny, Nz, Nt=Nt+1)
+    data_S_west  = read_from_binary("data/RT_50thTemp_W"; Ny, Nz, Nt=Nt+1)
+    data_S_north = partition_array(arch, read_from_binary("data/RT_50thTemp_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_S_south = partition_array(arch, read_from_binary("data/RT_50thTemp_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
 
 
-    set!(data_T_east, partition_array(arch, read_from_binary("data/RT_50thSalt_E"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_T_west, partition_array(arch, read_from_binary("data/RT_50thSalt_W"; Ny=Ny,Nz=Nz,Nt=Nt+1), (Ny,Nz,Nt+1)))
-    set!(data_T_north,partition_array(arch, read_from_binary("data/RT_50thSalt_N"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
-    set!(data_T_south,partition_array(arch, read_from_binary("data/RT_50thSalt_S"; Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1)))
+    data_T_east  = read_from_binary("data/RT_50thSalt_E"; Ny, Nz, Nt=Nt+1)
+    data_T_west  = read_from_binary("data/RT_50thSalt_W"; Ny, Nz, Nt=Nt+1)
+    data_T_north = partition_array(arch, read_from_binary("data/RT_50thSalt_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_T_south = partition_array(arch, read_from_binary("data/RT_50thSalt_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
 
     
 
