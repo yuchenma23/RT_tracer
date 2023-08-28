@@ -22,7 +22,7 @@ function read_from_binary(filename::String; Nx::Int=1, Ny::Int=1, Nz::Int=1, Nt:
 end
 
 
-function reallocate_uv(field::Array{T, 3}; dim::Int=1) where T
+function reallocate_uv(field::AbstractArray{T, 3}; dim::Int=1) where T
     Nx, Ny, Nz = size(field)
 
     # Depending on the dimension specified by `dim`, we'll interpolate the data.
@@ -63,7 +63,7 @@ end
 
 
 
-function reallocate_uv(field::Array{T, 2}; dim::Int=1) where T
+function reallocate_uv(field::AbstractArray{T, 2}; dim::Int=1) where T
     Nx, Ny = size(field)
 
     # Depending on the dimension specified by `dim`, we'll interpolate the data.
