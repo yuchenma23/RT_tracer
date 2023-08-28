@@ -4,6 +4,10 @@ using Oceananigans.BoundaryConditions: Open, Value, BC, DCBC
 import Oceananigans.BoundaryConditions: getbc
 import Base: getindex
 
+
+include("file_preparation.jl")
+
+
 struct TimeInterpolatedArray{T, N, I} 
     time_array :: AbstractArray{T, N}
     unit_time  :: I
@@ -144,10 +148,53 @@ function update_boundary_conditions!(simulation)
     # Partition the boundary data accordingly to arch!
     # Create the NamedTuple
     # Example:
+    Nx = 350 
+    Ny = 250
+    Nz = 175 
+    
+
+    #needs some function to do some extrapolation, the 2D boundary files are currently 
+
+    set!(data_u_east, partition_array(arch, read_from_binary("data/RT_50thUvel_E";Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_u_west, partition_array(arch, read_from_binary("data/RT_50thUvel_W";Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_u_north,partition_array(arch, read_from_binary("data/RT_50thUvel_N";Nx=Nx,Nz=Nz), (Nx,Nz)))
+    set!(data_u_south,partition_array(arch, read_from_binary("data/RT_50thUvel_S";Nx=Nx,Nz=Nz), (Nx,Nz)))
+
+    
+    set!(data_v_east, partition_array(arch, read_from_binary("data/RT_50thVvel_E"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_v_west, partition_array(arch, read_from_binary("data/RT_50thVvel_W"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_v_north,partition_array(arch, read_from_binary("data/RT_50thVvel_N"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+    set!(data_v_south,partition_array(arch, read_from_binary("data/RT_50thVvel_S"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+
+
+    set!(data_S_east, partition_array(arch, read_from_binary("data/RT_50thTemp_E"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_S_west, partition_array(arch, read_from_binary("data/RT_50thTemp_W"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_S_north,partition_array(arch, read_from_binary("data/RT_50thTemp_N"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+    set!(data_S_south,partition_array(arch, read_from_binary("data/RT_50thTemp_S"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+
+
+    set!(data_T_east, partition_array(arch, read_from_binary("data/RT_50thSalt_E"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_T_west, partition_array(arch, read_from_binary("data/RT_50thSalt_W"; Ny=Ny,Nz=Nz), (Ny,Nz)))
+    set!(data_T_north,partition_array(arch, read_from_binary("data/RT_50thSalt_N"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+    set!(data_T_south,partition_array(arch, read_from_binary("data/RT_50thSalt_S"; Nx=Nx,Nz=Nz), (Nx,Nz)))
+
+    
+
     # data_u_west = extract_west(partition(read_from_binary(....)))
     # data_u_east = extract_east(partition(read_from_binary(....)))
-    # bcs_u = (west = data_u_west, east = data_u_east, ....)
-    # fill_boundaries!(u, bcs_u)
+
+
+    #the function reallocate_uv puts the center grid to the face grid
+     bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
+     bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_sourth)
+     bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_sourth)
+     bcs_S = (west = data_S_west,                       east = data_S_east,                         north=data_S_north,                         south=data_S_sourth)
+     
+    fill_boundaries!(u, bcs_u)
+    fill_boundaries!(v, bcs_v)
+    fill_boundaries!(T, bcs_T)
+    fill_boundaries!(S, bcs_S)
+
     
     # Better way:
     # Save all boundary conditions in .jld2 

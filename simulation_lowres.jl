@@ -16,28 +16,10 @@ using SeawaterPolynomials
 using Oceananigans.TurbulenceClosures.CATKEVerticalDiffusivities: CATKEVerticalDiffusivity
 using Oceananigans.Grids: architecture
 
-#Yuchen's first change to the code
-#Yuchen's second change to the code
 
-
+include("file_preparation.jl")
 include("open_boundary_conditions.jl")
 
-function read_from_binary(filename, Nx, Ny, Nz)
-    arr = zeros(Float32, Nx*Ny*Nz)
-    read!(filename, arr)
-    arr = bswap.(arr) .|> Float64
-    arr = reshape(arr, Nx, Ny, Nz)
-
-    return reverse(arr, dims = 3)
-end
-
-function read_from_binary_2d(filename, Nx, Ny)
-    arr = zeros(Float32, Nx*Ny)
-    read!(filename, arr)
-    arr = bswap.(arr) .|> Float64
-    return reshape(arr, Nx, Ny)
-
-end
 
 #####
 ##### Specifying domain, grid and bathymetry
@@ -74,7 +56,7 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                    halo = (7, 7, 7),
                                topology = topo)
 
-bottom = partition_array(arch, read_from_binary_2d("data/RT_bathy_50th",Nx_tot,Ny), size(grid))
+bottom = partition_array(arch, read_from_binary("data/RT_bathy_50th"; Nx=Nx_tot,Ny=Ny), size(grid))
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
 
@@ -106,7 +88,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 
 
-kappa = partition_array(arch, read_from_binary("data/RT_kappa_50th",Nx_tot,Ny,Nz), size(grid))
+kappa = partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
@@ -146,17 +128,28 @@ model = HydrostaticFreeSurfaceModel(; grid,
 u, v, w = model.velocities
 T, S, c = model.tracers
 
-u_init = zeros(size(u))
-v_init = zeros(size(v))
+
+
+T_init = read_from_binary("data/RT_TempInit_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz)
+S_init = read_from_binary("data/RT_SaltInit_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz)
+c_init = read_from_binary("data/TracerIC_RT_50th.bin"; Nx=Nx_tot,Ny=Ny,Nz=Nz)
+u_init = read_from_binary("data/RT_UvelInit_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz)
+v_init = read_from_binary("data/RT_VvelInit_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz)
+
 
 # u_init[1:end-1, :, :] .= 
 # v_init[:, 1:end-1, :] .= partition_array(arch, file_init["v"], size(T))
 
 # set!(u, u_init)
 # set!(v, v_init)
-set!(T, partition_array(arch, read_from_binary("data/RT_TempInit_50th",Nx_tot,Ny,Nz), size(T)))
-set!(S, partition_array(arch, read_from_binary("data/RT_SaltInit_50th",Nx_tot,Ny,Nz), size(S)))
-set!(c, partition_array(arch, read_from_binary("data/TracerIC_RT_50th.bin",Nx_tot,Ny,Nz), size(c)))
+
+
+
+set!(u, partition_array(arch,reallocate_uv(u_init;dim=1) , size(u)))
+set!(v, partition_array(arch,reallocate_uv(v_init;dim=2) , size(v)))
+set!(T, partition_array(arch,T_init , size(T)))
+set!(S, partition_array(arch,S_init , size(S)))
+set!(c, partition_array(arch,c_init , size(c)))
 
 
 
@@ -183,6 +176,9 @@ function print_progress(simulation)
     
     return nothing
 end
+
+
+update_boundary_conditions!(simulation)
 
 simulation.callbacks[:progress] = Callback(print_progress, IterationInterval(20))
 

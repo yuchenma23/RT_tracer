@@ -191,10 +191,11 @@ simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c
 run!(simulation)
 
 
-for time in 0:simulation.stop_time
-    time_step!(simulation.model, simulation.Δt)
-
-    if need_to_callback
-        execute_callback!(simulation)
-    end
-end
+#what's happening is something like below
+#for time in 0:simulation.stop_time
+#   time_step!(simulation.model, simulation.Δt)
+#
+#    if need_to_callback
+#        execute_callback!(simulation)
+#    end
+#end
