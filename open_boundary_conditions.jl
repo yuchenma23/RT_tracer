@@ -206,9 +206,9 @@ function update_boundary_conditions!(simulation)
 
 
      bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
-     bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_sourth)
-     bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_sourth)
-     bcs_S = (west = data_S_west,                       east = data_S_east,                         north=data_S_north,                         south=data_S_sourth)
+     bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_south)
+     bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_south)
+     bcs_S = (west = data_S_west,                       east = data_S_east,                         north=data_S_north,                         south=data_S_south)
      
     fill_boundaries!(u, bcs_u)
     fill_boundaries!(v, bcs_v)

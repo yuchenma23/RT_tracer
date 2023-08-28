@@ -32,37 +32,33 @@ end
 
 
 
-
-@kernel function _reallocate_uv!(new_field, field, Nx, ::XDim)
-    i′, j, k = @index(Global, NTuple)
-    i = i′ + 1
-    @inbounds begin
-        if i == 1
-            new_field[1, j, k] = (field[1, j, k]*3-field[2, j, k])/2
-        elseif i == Nx+1
-            new_field[Nx+1, j, k] = (field[Nx, j, k]*3-field[Nx-1, j, k])/2
-        else
-            new_field[i, j, k] = 0.5 * (field[i-1, j, k] + field[i, j, k])
-        end
-    
-    end
+# Grid of threads with indices going from 1:Nx-1, 1:Ny, 1:Nz
+@kernel function _reallocate_uv!(new_field, field, ::XDim)
+    i′, j, k = @index(Global, NTuple) # launched with i in 1:Nx-1
+    i = i′ + 1 # i becomes 2:Nx
+    @inbounds new_field[i, j, k] = 0.5 * (field[i-1, j, k] + field[i, j, k])
 end
 
-@kernel function _reallocate_uv!(new_field, field, Ny, ::YDim)
+
+@kernel function _reallocate_uv!(new_field, field, ::YDim)
     i, j′, k = @index(Global, NTuple)
     j = j′ + 1
-    @inbounds begin
-        if j == 1
-            new_field[i, 1, k] = (field[i, 1, k]*3-field[i, 2, k])/2
-        elseif j == Ny+1
-            new_field[i, Ny+1, k] = (field[i, Ny, k]*3-field[i, Ny-1, k])/2
-        else
-            new_field[i, j, k] = 0.5 * (field[i, j-1, k] + field[i, j, k])
-        end
-    end
+    @inbounds new_field[i, j, k] = 0.5 * (field[i, j-1, k] + field[i, j, k])
 end
 
+@kernel function correct_boundary_x!(new_field, field, Nx)
+    j, k = @index(Global, NTuple)
+    @inbounds new_field[1, j, k] = (field[1, j, k]*3-field[2, j, k])/2
+    @inbounds new_field[Nx+1, j, k] = (field[Nx, j, k]*3-field[Nx-1, j, k])/2
+    
+end
 
+@kernel function correct_boundary_y!(new_field, field, Ny)
+    i, k = @index(Global, NTuple)
+    @inbounds new_field[i, 1, k] = (field[i, 1, k]*3-field[i, 2, k])/2
+    @inbounds new_field[i, Ny+1, k] = (field[i, Ny, k]*3-field[i, Ny-1, k])/2
+  
+end
 
 
 
@@ -71,77 +67,29 @@ function reallocate_uv(field::AbstractArray{T, 3}; dim::Int=1) where T
     arch = Oceananigans.architecture(field)
     #
 
-    new_field_size = (Nx,Ny,Nz)
+    new_field_size = (Nx, Ny, Nz)
     if dim == 1
         new_field_size = (Nx+1, Ny, Nz)
     elseif dim == 2
         new_field_size = (Nx, Ny+1, Nz)
-    end
-    new_field = similar(field,new_field_size)
-    
-    if dim == 1
-        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx, Ny, Nz))
-        reallocate_uv!(new_field, field, Nx, XDim())
-    elseif dim == 2
-        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx, Ny, Nz))
-        reallocate_uv!(new_field, field, Ny, YDim())
     else
-        throw(ArgumentError("Invalid dimension specified. Please choose between 1, 2, or 3."))
+        throw(ArgumentError("Invalid dimension specified. Please choose between 1, 2."))
     end
+    new_field = arch_array(arch, zeros(new_field_size))
 
-    return new_field
-end
-
-function reallocate_uv(field::AbstractArray{T, 2}; dim::Int=1) where T
-    Nx, Ny = size(field)
-    arch = architecture(field)
-    # Depending on the dimension specified by `dim`, we'll interpolate the data.
-    # The interpolated field will have one additional element along the specified dimension.
-    new_field = similar(field)
     if dim == 1
-        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx, Ny))
-        reallocate_uv!(new_field, field, Nx, XDim())
+        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx-1, Ny, Nz))
+        reallocate_uv!(new_field, field, XDim())
+        correct_boundary_x! = _correct_boundary_x!(device(arch), (16, 16), (Ny, Nz))
+        correct_boundary_x!(new_field, field, Nx)
     elseif dim == 2
-        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx, Ny))
-        reallocate_uv!(new_field, field, Ny, YDim())
+        reallocate_uv! = _reallocate_uv!(device(arch), (16, 16), (Nx, Ny-1, Nz))
+        reallocate_uv!(new_field, field, YDim())
+        correct_boundary_y! = _correct_boundary_y!(device(arch), (16, 16), (Nx, Nz))
+        correct_boundary_y!(new_field, field, Ny)
     else
         throw(ArgumentError("Invalid dimension specified. Please choose between 1, 2."))
     end
 
     return new_field
 end
-   
-
-
-
-#= 
-function reallocate_uv(field::AbstractArray{T, 2}; dim::Int=1) where T
-    Nx, Ny = size(field)
-
-    # Depending on the dimension specified by `dim`, we'll interpolate the data.
-    # The interpolated field will have one additional element along the specified dimension.
-    if dim == 1
-        new_field = Array{T}(undef, Nx+1, Ny)
-        for j=1:Ny
-            new_field[1, j] = (field[1, j]*3-field[2, j])/2  #simple linear interpolation 
-            new_field[Nx+1, j] = (field[Nx, j]*3-field[Nx-1, j])/2
-            for i=2:Nx
-                new_field[i, j] = 0.5 * (field[i-1, j] + field[i, j])
-            end
-        end
-    elseif dim == 2
-        new_field = Array{T}(undef, Nx, Ny+1)
-        for i=1:Nx
-            new_field[i, 1] = (field[i, 1]*3-field[i, 2])/2 
-            new_field[i, Ny+1] = (field[i, Ny]*3-field[i, Ny-1])/2
-            for j=2:Ny
-                new_field[i, j] = 0.5 * (field[i, j-1] + field[i, j])
-            end
-        end
-    else
-        throw(ArgumentError("Invalid dimension specified. Please choose between 1 or 2."))
-    end
-
-    return new_field
-end
- =#
