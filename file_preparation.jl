@@ -1,5 +1,3 @@
-using Interpolations
-
 
 function read_from_binary(filename::String; Nx::Int=1, Ny::Int=1, Nz::Int=1, Nt::Int=1)
     # Initialize the array with 4 dimensions
