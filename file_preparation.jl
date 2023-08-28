@@ -46,14 +46,14 @@ end
     @inbounds new_field[i, j, k] = 0.5 * (field[i, j-1, k] + field[i, j, k])
 end
 
-@kernel function correct_boundary_x!(new_field, field, Nx)
+@kernel function _correct_boundary_x!(new_field, field, Nx)
     j, k = @index(Global, NTuple)
     @inbounds new_field[1, j, k] = (field[1, j, k]*3-field[2, j, k])/2
     @inbounds new_field[Nx+1, j, k] = (field[Nx, j, k]*3-field[Nx-1, j, k])/2
     
 end
 
-@kernel function correct_boundary_y!(new_field, field, Ny)
+@kernel function _correct_boundary_y!(new_field, field, Ny)
     i, k = @index(Global, NTuple)
     @inbounds new_field[i, 1, k] = (field[i, 1, k]*3-field[i, 2, k])/2
     @inbounds new_field[i, Ny+1, k] = (field[i, Ny, k]*3-field[i, Ny-1, k])/2
