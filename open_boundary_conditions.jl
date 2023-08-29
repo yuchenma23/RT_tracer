@@ -113,23 +113,19 @@ function fill_boundaries!(var, data)
 
     # update BC only if not communicating
     if !(var.boundary_conditions.west isa DCBC)
-        west  = var.boundary_conditions.west.condition.time_array
-        copyto!(west,  data.west)
+        copyto!(var.boundary_conditions.west.condition.time_array,  data.west)
     end
 
     if !(var.boundary_conditions.east isa DCBC)
-        east  = var.boundary_conditions.east.condition.time_array
-        copyto!(east,  data.east)
+        copyto!(var.boundary_conditions.east.condition.time_array,  data.east)
     end
 
     if !(var.boundary_conditions.south isa DCBC)
-        south  = var.boundary_conditions.south.condition.time_array
-        copyto!(south, data.south)
+        copyto!(var.boundary_conditions.south.condition.time_array, data.south)
     end
     
     if !(var.boundary_conditions.north isa DCBC)
-        north  = var.boundary_conditions.north.condition.time_array
-        copyto!(north, data.north)
+        copyto!(var.boundary_conditions.north.condition.time_array, data.north)
     end
 
     return nothing
@@ -171,8 +167,8 @@ function update_boundary_conditions!(simulation)
     data_S_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
     data_S_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-    data_u_east  = read_from_binary("data/RT_50thUvel_E";Ny=Ny,Nz=Nz,Nt=Nt+1)
-    data_u_west  = read_from_binary("data/RT_50thUvel_W";Ny=Ny,Nz=Nz,Nt=Nt+1)
+    data_u_east  = read_from_binary("data/RT_50thUvel_E"; Ny, Nz, Nt=Nt+1)
+    data_u_west  = read_from_binary("data/RT_50thUvel_W"; Ny, Nz, Nt=Nt+1)
     data_u_north = partition_array(arch, read_from_binary("data/RT_50thUvel_N";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
     data_u_south = partition_array(arch, read_from_binary("data/RT_50thUvel_S";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
 
