@@ -1,6 +1,6 @@
 using MPI
 
-const using_MPI = true
+const using_MPI = false
 
 if using_MPI
     MPI.Init()

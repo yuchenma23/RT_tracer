@@ -5,14 +5,18 @@ import Oceananigans.BoundaryConditions: getbc
 using Oceananigans.Architectures: device, CPU, GPU, array_type, arch_array
 import Base: getindex
 
+import Adapt
 
 include("file_preparation.jl")
-
 
 struct TimeInterpolatedArray{T, N, I} 
     time_array :: AbstractArray{T, N}
     unit_time  :: I
 end
+
+Adapt.adapt_structure(to, t::TimeInterpolatedArray) = 
+        TimeInterpolatedArray(Adapt.adapt(to, t.time_array),
+                              Adapt.adapt(to, t.unit_time))    
 
 @inline function getindex(t::TimeInterpolatedArray{T, N},  clock::Clock, idx...) where {T, N}
     @inbounds begin

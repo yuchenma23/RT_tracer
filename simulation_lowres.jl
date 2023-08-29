@@ -1,6 +1,6 @@
 using MPI
 
-const using_MPI = true
+const using_MPI = false
 
 if using_MPI
     MPI.Init()
@@ -24,7 +24,9 @@ include("open_boundary_conditions.jl")
 #####
 ##### Specifying domain, grid and bathymetry
 #####
-
+Adapt.adapt_structure(to, t::TimeInterpolatedArray) = 
+        TimeInterpolatedArray(Adapt.adapt(to, t.time_array),
+                              Adapt.adapt(to, t.unit_time))    
 
 
 @inline partition_array(arch::DistributedArch, array, size) = partition_global_array(arch, array, size)
@@ -105,7 +107,7 @@ chunk_size_boundary = 30
 chunk_size_forcing  = 4
 
 boundary_conditions = NamedTuple() # 
-set_boundary_conditions(grid; Nt = 30)
+boundary_conditions = set_boundary_conditions(grid; Nt = 30)
 
 forcing             = NamedTuple() # set_forcing(grid; Nt = chunk_size_forcing)
 
