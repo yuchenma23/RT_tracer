@@ -46,10 +46,10 @@ else
     arch = GPU()
 end
 
-Nx_tot = 350
+Nx_tot = 5
 Nx = Nx_tot ÷ Nranks
-Ny = 250
-Nz = 175
+Ny = 5
+Nz = 5
 
 grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                latitude = (53, 58), 
@@ -89,8 +89,8 @@ coriolis = HydrostaticSphericalCoriolis()
 
 
 
-
-kappa =  partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
+kappa = 1.0
+#kappa =  partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
