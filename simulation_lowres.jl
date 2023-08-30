@@ -43,7 +43,7 @@ if using_MPI
 else
     Nranks = 1
     rank = 0
-    arch = CPU()
+    arch = GPU()
 end
 
 Nx_tot = 350
@@ -90,7 +90,7 @@ coriolis = HydrostaticSphericalCoriolis()
 
 
 
-kappa = 1.0 # partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
+kappa =  partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
@@ -124,7 +124,7 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       tracer_advection,
                                       coriolis,
                                       buoyancy,
-				      closure,
+				                      closure,
                                       boundary_conditions,
                                       forcing,
                                       tracers = (:T, :S, :c),
