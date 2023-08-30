@@ -43,7 +43,7 @@ if using_MPI
 else
     Nranks = 1
     rank = 0
-    arch = GPU()
+    arch = CPU()
 end
 
 Nx_tot = 350
@@ -58,8 +58,8 @@ grid = LatitudeLongitudeGrid(arch; size = (Nx, Ny, Nz),
                                    halo = (7, 7, 7),
                                topology = topo)
 
-bottom = partition_array(arch, read_from_binary("data/RT_bathy_50th"; Nx=Nx_tot,Ny=Ny), size(grid))
-grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
+# bottom = partition_array(arch, read_from_binary("data/RT_bathy_50th"; Nx=Nx_tot,Ny=Ny), size(grid))
+# grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom), true)
 # grid = ImmersedBoundaryGrid(grid, PartialCellBottom(bottom))
 
 #####
@@ -90,11 +90,13 @@ coriolis = HydrostaticSphericalCoriolis()
 
 
 
-kappa = partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
+kappa = 1.0 # partition_array(arch, read_from_binary("data/RT_kappa_50th"; Nx=Nx_tot,Ny=Ny,Nz=Nz), size(grid))
 vertical_diffusivity  = VerticalScalarDiffusivity(ν = kappa, κ = kappa)
 convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz = 0.1)
 # convective_adjustment = RiBasedVerticalDiffusivity()
 # convective_adjustment = CATKEVerticalDiffusivity() 
+
+closure = (vertical_diffusivity, convective_adjustment)
 
 equation_of_state = SeawaterPolynomials.TEOS10EquationOfState()
 buoyancy = SeawaterBuoyancy(; equation_of_state)
@@ -122,6 +124,7 @@ model = HydrostaticFreeSurfaceModel(; grid,
                                       tracer_advection,
                                       coriolis,
                                       buoyancy,
+				      closure,
                                       boundary_conditions,
                                       forcing,
                                       tracers = (:T, :S, :c),
@@ -203,3 +206,4 @@ simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, T, S, c
 
 # Let's RUN!!!set
 run!(simulation)
+

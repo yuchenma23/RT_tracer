@@ -1,16 +1,17 @@
 using Oceananigans
 using Oceananigans.BoundaryConditions
-using Oceananigans.BoundaryConditions: Open, Value, BC, DCBC
+using Oceananigans.BoundaryConditions: Open, Value, BC, DCBC, AbstractBoundaryConditionClassification
 import Oceananigans.BoundaryConditions: getbc
+using Oceananigans.Grids: AbstractGrid
 using Oceananigans.Architectures: device, CPU, GPU, array_type, arch_array
 import Base: getindex
 
-import Adapt
+using Adapt
 
 include("file_preparation.jl")
 
-struct TimeInterpolatedArray{T, N, I} 
-    time_array :: AbstractArray{T, N}
+struct TimeInterpolatedArray{A, I} 
+    time_array :: A
     unit_time  :: I
 end
 
@@ -18,28 +19,35 @@ Adapt.adapt_structure(to, t::TimeInterpolatedArray) =
         TimeInterpolatedArray(Adapt.adapt(to, t.time_array),
                               Adapt.adapt(to, t.unit_time))    
 
-@inline function getindex(t::TimeInterpolatedArray{T, N},  clock::Clock, idx...) where {T, N}
+Adapt.adapt_structure(to, b::BoundaryCondition{C, A}) where {C<:Value, A<:TimeInterpolatedArray} =
+    BoundaryCondition(C, Adapt.adapt(to, b.condition))
+
+Adapt.adapt_structure(to, b::BoundaryCondition{C, A}) where {C<:Open, A<:TimeInterpolatedArray} =
+    BoundaryCondition(C, Adapt.adapt(to, b.condition))
+
+@inline function getindex(t::TimeInterpolatedArray, i::Int, j::Int, clock::Clock) 
     @inbounds begin
         n = clock.time / t.unit_time +1
         n₁ = Int(floor(n))
 
         if n₁ == n
-            return getindex(t.time_array, idx..., n₁)
+            return getindex(t.time_array, i, j, n₁)
         end
         n₂ = Int(n₁ + 1)
 
-        return getindex(t.time_array, idx..., n₁) * (n₂ - n) + getindex(t.time_array, idx..., n₂) * (n - n₁)
+        return getindex(t.time_array, i, j, n₁) * (n₂ - n) + getindex(t.time_array, i, j, n₂) * (n - n₁)
     end
 end
 
-@inline getbc(bc::BC{<:Open,  <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[i, j, clock]
-@inline getbc(bc::BC{<:Value, <:TimeInterpolatedArray}, i::Integer, j::Integer, grid, clock::Clock, args...) = bc.condition[i, j, clock]
+@inline getbc(bc::BC{<:Open,  <:TimeInterpolatedArray}, i::Integer, j::Integer, grid::AbstractGrid, clock, args...) = bc.condition[i, j, clock]
+@inline getbc(bc::BC{<:Value, <:TimeInterpolatedArray}, i::Integer, j::Integer, grid::AbstractGrid, clock, args...) = bc.condition[i, j, clock]
 
 function set_boundary_conditions(grid; Nt = 30)
 
     Nx, Ny, Nz = size(grid)
     arch = architecture(grid)
 
+    @show arch
     u_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     u_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     u_south = arch_array(arch, zeros(Nx+1, Nz, Nt+1))
