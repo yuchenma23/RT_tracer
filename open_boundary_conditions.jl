@@ -14,10 +14,10 @@ function set_boundary_conditions(grid; chunk_size = 10)
     arch = architecture(grid)
 
     @show arch
-    u_west  = FieldTimeSeries("boundary_conditions.jld2", "u_west"; backend = InMemory(; chunk_size))
-    u_east  = FieldTimeSeries("boundary_conditions.jld2", "u_east"; backend = InMemory(; chunk_size))
-    u_south = FieldTimeSeries("boundary_conditions.jld2", "u_south"; backend = InMemory(c))
-    u_north = FieldTimeSeries("boundary_conditions.jld2", "u_north"; backend = InMemory(c))
+    u_west  = FieldTimeSeries("boundary_conditions.jld2", "u_west";  backend = InMemory(; chunk_size))
+    u_east  = FieldTimeSeries("boundary_conditions.jld2", "u_east";  backend = InMemory(; chunk_size))
+    u_south = FieldTimeSeries("boundary_conditions.jld2", "u_south"; backend = InMemory(; chunk_size))
+    u_north = FieldTimeSeries("boundary_conditions.jld2", "u_north"; backend = InMemory(; chunk_size))
 
     v_west  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
     v_east  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
