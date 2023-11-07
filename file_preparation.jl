@@ -90,14 +90,16 @@ end
 
 function setup_boundary_data!(path, grid; frequency = 1day, Nt = 158)
     times = 0:frequency:Nt*frequency
-    save_variable!(path, "u", times, (Nothing, Center, Center), (Face,   Nothing, Center), size(grid)...)
-    save_variable!(path, "v", times, (Nothing, Face,   Center), (Center, Nothing, Center), size(grid)...)
-    save_variable!(path, "T", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
-    save_variable!(path, "S", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
-    
+
+    save_variable!(path, "u", "Uvel", times, (Nothing, Center, Center), (Face,   Nothing, Center), size(grid)...)
+    save_variable!(path, "v", "VVel", times, (Nothing, Face,   Center), (Center, Nothing, Center), size(grid)...)
+    save_variable!(path, "T", "Temp", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
+    save_variable!(path, "S", "Salt", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
+
+    return nothing    
 end
 
-function save_variable!(path, var, times, locx, locy, Nx, Ny, Nz; Nt = length(times))
+function save_variable!(path, var, var_mitgcm, times, locx, locy, Nx, Ny, Nz; Nt = length(times))
 
     west  = FieldTimeSeries{locx...}(grid, times; backend = OnDisk(), path, name = var * "_west")
     east  = FieldTimeSeries{locx...}(grid, times; backend = OnDisk(), path, name = var * "_east")
@@ -132,6 +134,8 @@ function save_variable!(path, var, times, locx, locy, Nx, Ny, Nz; Nt = length(ti
         set!(south, tmpy, t)
         set!(north, tmpy, t)
     end
+
+    return nothing
 end
 
 
