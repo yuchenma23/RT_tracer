@@ -8,55 +8,49 @@ import Base: getindex
 
 using Adapt
 
-function set_boundary_conditions_and_restoring(grid; chunk_size = 20)
+function set_boundary_conditions_and_restoring(; chunk_size = 20)
 
-    u_west  = FieldTimeSeries("boundary_conditions.jld2", "u_west";  backend = InMemory(; chunk_size))
-    u_east  = FieldTimeSeries("boundary_conditions.jld2", "u_east";  backend = InMemory(; chunk_size))
-    u_south = FieldTimeSeries("boundary_conditions.jld2", "u_south"; backend = InMemory(; chunk_size))
-    u_north = FieldTimeSeries("boundary_conditions.jld2", "u_north"; backend = InMemory(; chunk_size))
+    u_fts = load_boundary_conditions("u"; chunk_size)
+    v_fts = load_boundary_conditions("v"; chunk_size)
+    T_fts = load_boundary_conditions("T"; chunk_size)
+    S_fts = load_boundary_conditions("S"; chunk_size)
 
-    v_west  = FieldTimeSeries("boundary_conditions.jld2", "v_west";  backend = InMemory(; chunk_size))
-    v_east  = FieldTimeSeries("boundary_conditions.jld2", "v_east";  backend = InMemory(; chunk_size))
-    v_south = FieldTimeSeries("boundary_conditions.jld2", "v_south"; backend = InMemory(; chunk_size))
-    v_north = FieldTimeSeries("boundary_conditions.jld2", "v_north"; backend = InMemory(; chunk_size))
-
-    T_west  = FieldTimeSeries("boundary_conditions.jld2", "T_west";  backend = InMemory(; chunk_size))
-    T_east  = FieldTimeSeries("boundary_conditions.jld2", "T_east";  backend = InMemory(; chunk_size))
-    T_south = FieldTimeSeries("boundary_conditions.jld2", "T_south"; backend = InMemory(; chunk_size))
-    T_north = FieldTimeSeries("boundary_conditions.jld2", "T_north"; backend = InMemory(; chunk_size))
-
-    S_west  = FieldTimeSeries("boundary_conditions.jld2", "S_west";  backend = InMemory(; chunk_size))
-    S_east  = FieldTimeSeries("boundary_conditions.jld2", "S_east";  backend = InMemory(; chunk_size))
-    S_south = FieldTimeSeries("boundary_conditions.jld2", "S_south"; backend = InMemory(; chunk_size))
-    S_north = FieldTimeSeries("boundary_conditions.jld2", "S_north"; backend = InMemory(; chunk_size))
-
-    u_west_bc  =  OpenBoundaryCondition(u_west )
-    u_east_bc  =  OpenBoundaryCondition(u_east )
-    u_south_bc = ValueBoundaryCondition(u_south)
-    u_north_bc = ValueBoundaryCondition(u_north)
+    u_west_bc  =  OpenBoundaryCondition(u_fts.west )
+    u_east_bc  =  OpenBoundaryCondition(u_fts.east )
+    u_south_bc = ValueBoundaryCondition(u_fts.south)
+    u_north_bc = ValueBoundaryCondition(u_fts.north)
     
-    v_west_bc  = ValueBoundaryCondition(v_west )
-    v_east_bc  = ValueBoundaryCondition(v_east )
-    v_south_bc =  OpenBoundaryCondition(v_south)
-    v_north_bc =  OpenBoundaryCondition(v_north)
+    v_west_bc  = ValueBoundaryCondition(v_fts.west )
+    v_east_bc  = ValueBoundaryCondition(v_fts.east )
+    v_south_bc =  OpenBoundaryCondition(v_fts.south)
+    v_north_bc =  OpenBoundaryCondition(v_fts.north)
     
     u_bcs = FieldBoundaryConditions(west = u_west_bc, east = u_east_bc, south = u_south_bc, north = u_north_bc)
     v_bcs = FieldBoundaryConditions(west = v_west_bc, east = v_east_bc, south = v_south_bc, north = v_north_bc)
 
-    T_west_bc  = ValueBoundaryCondition(T_west )
-    T_east_bc  = ValueBoundaryCondition(T_east )
-    T_south_bc = ValueBoundaryCondition(T_north)
-    T_north_bc = ValueBoundaryCondition(T_south)
+    T_west_bc  = ValueBoundaryCondition(T_fts.west )
+    T_east_bc  = ValueBoundaryCondition(T_fts.east )
+    T_south_bc = ValueBoundaryCondition(T_fts.north)
+    T_north_bc = ValueBoundaryCondition(T_fts.south)
     
-    S_west_bc  = ValueBoundaryCondition(S_west )
-    S_east_bc  = ValueBoundaryCondition(S_east )
-    S_south_bc = ValueBoundaryCondition(S_north)
-    S_north_bc = ValueBoundaryCondition(S_south)
+    S_west_bc  = ValueBoundaryCondition(S_fts.west )
+    S_east_bc  = ValueBoundaryCondition(S_fts.east )
+    S_south_bc = ValueBoundaryCondition(S_fts.north)
+    S_north_bc = ValueBoundaryCondition(S_fts.south)
 
     T_bcs = FieldBoundaryConditions(west = T_west_bc, east = T_east_bc, south = T_south_bc, north = T_north_bc)
     S_bcs = FieldBoundaryConditions(west = S_west_bc, east = S_east_bc, south = S_south_bc, north = S_north_bc)
 
     return (u = u_bcs, v = v_bcs, T = T_bcs, S = S_bcs)
+end
+
+function load_boundary_conditions(var; chunk_size)
+    west  = FieldTimeSeries("boundary_conditions.jld2", var * "_west";  backend = InMemory(; chunk_size))
+    east  = FieldTimeSeries("boundary_conditions.jld2", var * "_east";  backend = InMemory(; chunk_size))
+    south = FieldTimeSeries("boundary_conditions.jld2", var * "_south"; backend = InMemory(; chunk_size))
+    north = FieldTimeSeries("boundary_conditions.jld2", var * "_north"; backend = InMemory(; chunk_size))
+
+    return (; west, east, south, north)
 end
 
 #= @inline function relaxation_forcing(i, j, k, grid, clock, fields, p)
