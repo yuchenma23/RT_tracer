@@ -8,31 +8,27 @@ import Base: getindex
 
 using Adapt
 
-function set_boundary_conditions(grid; chunk_size = 10)
+function set_boundary_conditions_and_restoring(grid; chunk_size = 20)
 
-    Nx, Ny, Nz = size(grid)
-    arch = architecture(grid)
-
-    @show arch
     u_west  = FieldTimeSeries("boundary_conditions.jld2", "u_west";  backend = InMemory(; chunk_size))
     u_east  = FieldTimeSeries("boundary_conditions.jld2", "u_east";  backend = InMemory(; chunk_size))
     u_south = FieldTimeSeries("boundary_conditions.jld2", "u_south"; backend = InMemory(; chunk_size))
     u_north = FieldTimeSeries("boundary_conditions.jld2", "u_north"; backend = InMemory(; chunk_size))
 
-    v_west  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
-    v_east  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
-    v_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
-    v_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    v_west  = FieldTimeSeries("boundary_conditions.jld2", "v_west";  backend = InMemory(; chunk_size))
+    v_east  = FieldTimeSeries("boundary_conditions.jld2", "v_east";  backend = InMemory(; chunk_size))
+    v_south = FieldTimeSeries("boundary_conditions.jld2", "v_south"; backend = InMemory(; chunk_size))
+    v_north = FieldTimeSeries("boundary_conditions.jld2", "v_north"; backend = InMemory(; chunk_size))
 
-    T_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    T_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    T_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
-    T_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    T_west  = FieldTimeSeries("boundary_conditions.jld2", "T_west";  backend = InMemory(; chunk_size))
+    T_east  = FieldTimeSeries("boundary_conditions.jld2", "T_east";  backend = InMemory(; chunk_size))
+    T_south = FieldTimeSeries("boundary_conditions.jld2", "T_south"; backend = InMemory(; chunk_size))
+    T_north = FieldTimeSeries("boundary_conditions.jld2", "T_north"; backend = InMemory(; chunk_size))
 
-    S_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    S_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    S_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
-    S_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
+    S_west  = FieldTimeSeries("boundary_conditions.jld2", "S_west";  backend = InMemory(; chunk_size))
+    S_east  = FieldTimeSeries("boundary_conditions.jld2", "S_east";  backend = InMemory(; chunk_size))
+    S_south = FieldTimeSeries("boundary_conditions.jld2", "S_south"; backend = InMemory(; chunk_size))
+    S_north = FieldTimeSeries("boundary_conditions.jld2", "S_north"; backend = InMemory(; chunk_size))
 
     u_west_bc  =  OpenBoundaryCondition(u_west )
     u_east_bc  =  OpenBoundaryCondition(u_east )
