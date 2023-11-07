@@ -19,9 +19,11 @@ using Oceananigans.Grids: architecture
 #Yuchen's first change to the code
 #Yuchen's second change to the code
 
-
 include("open_boundary_conditions.jl")
 include("grid_load_balance.jl")
+include("file_preparation.jl")
+
+
 
 function read_from_binary(filename, Nx, Ny, Nz)
     arr = zeros(Float32, Nx*Ny*Nz)
@@ -35,8 +37,6 @@ end
 #####
 ##### Specifying domain, grid and bathymetry
 #####
-
-
 
 @inline partition_array(arch::DistributedArch, array, size) = partition_global_array(arch, array, size)
 @inline partition_array(arch, array, size) = array

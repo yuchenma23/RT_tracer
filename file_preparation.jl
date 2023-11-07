@@ -8,14 +8,15 @@ struct YDim end
 
 function read_from_binary(filename::String; Nx::Int=1, Ny::Int=1, Nz::Int=1, Nt::Int=1)
     # Initialize the array with 4 dimensions
-    arr = zeros(Float32, Nx, Ny, Nz, Nt)
+    arr = zeros(Float32, Nx * Ny * Nz * Nt)
 
     # Read from the file
     read!(filename, arr)
     arr = bswap.(arr) .|> Float64
+    arr = reshape(arr, Nx, Ny, Nz, Nt)
 
     # Always reverse in the z-direction
-    arr= reverse(arr, dims=3)
+    arr = reverse(arr, dims=3)
 
     # Find which dimensions have size 1
     dims_to_drop = findall(size(arr) .== 1)
@@ -86,3 +87,52 @@ function reallocate_uv(field::AbstractArray{T, 3}; dim::Int=1) where T
 
     return new_field
 end
+
+function setup_boundary_data!(path, grid; frequency = 1day, Nt = 158)
+    times = 0:frequency:Nt*frequency
+    save_variable!(path, "u", times, (Nothing, Center, Center), (Face,   Nothing, Center), size(grid)...)
+    save_variable!(path, "v", times, (Nothing, Face,   Center), (Center, Nothing, Center), size(grid)...)
+    save_variable!(path, "T", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
+    save_variable!(path, "S", times, (Nothing, Center, Center), (Center, Nothing, Center), size(grid)...)
+    
+end
+
+function save_variable!(path, var, times, locx, locy, Nx, Ny, Nz; Nt = length(times))
+
+    west  = FieldTimeSeries{locx...}(grid, times; backend = OnDisk(), path, name = var * "_west")
+    east  = FieldTimeSeries{locx...}(grid, times; backend = OnDisk(), path, name = var * "_east")
+    south = FieldTimeSeries{locy...}(grid, times; backend = OnDisk(), path, name = var * "_south")
+    north = FieldTimeSeries{locy...}(grid, times; backend = OnDisk(), path, name = var * "_north")
+
+    tmpW = Field{locx...}(grid)
+    tmpE = Field{locx...}(grid)
+    tmpS = Field{locy...}(grid)
+    tmpN = Field{locy...}(grid)
+
+    for t in 1:Nt
+        data_west  = read_from_binary("RT_100th" * var_mitgcm * "_W"; Ny, Nz, Nt)
+        data_east  = read_from_binary("RT_100th" * var_mitgcm * "_E"; Ny, Nz, Nt)
+
+        data_west  = locx[2] == Face ? reallocate_uv(data_west, dim = 2) : data_west
+        data_east  = locx[2] == Face ? reallocate_uv(data_east, dim = 2) : data_east
+
+        data_south = read_from_binary("RT_100th" * var_mitgcm * "_S"; Nx, Nz, Nt)
+        data_north = read_from_binary("RT_100th" * var_mitgcm * "_N"; Nx, Nz, Nt)
+
+        data_south = locy[2] == Face ? reallocate_uv(data_south, dim = 1) : data_south
+        data_north = locy[2] == Face ? reallocate_uv(data_north, dim = 1) : data_north
+
+        set!(tmpW, data_west)
+        set!(tmpE, data_east)
+        set!(tmpS, data_south)
+        set!(tmpN, data_north)
+
+        set!(west,  tmpx, t)
+        set!(east,  tmpx, t)
+        set!(south, tmpy, t)
+        set!(north, tmpy, t)
+    end
+end
+
+
+

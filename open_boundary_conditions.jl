@@ -8,50 +8,16 @@ import Base: getindex
 
 using Adapt
 
-include("file_preparation.jl")
-
-struct TimeInterpolatedArray{A, I} 
-    time_array :: A
-    unit_time  :: I
-end
-
-Adapt.adapt_structure(to, t::TimeInterpolatedArray) = 
-        TimeInterpolatedArray(Adapt.adapt(to, t.time_array),
-                              Adapt.adapt(to, t.unit_time))    
-
-Adapt.adapt_structure(to, b::BoundaryCondition{C, A}) where {C<:Value, A<:TimeInterpolatedArray} =
-    BoundaryCondition(C, Adapt.adapt(to, b.condition))
-
-Adapt.adapt_structure(to, b::BoundaryCondition{C, A}) where {C<:Open, A<:TimeInterpolatedArray} =
-    BoundaryCondition(C, Adapt.adapt(to, b.condition))
-
-@inline function getindex(t::TimeInterpolatedArray, i::Int, j::Int, clock::Clock) 
-    @inbounds begin
-        n = clock.time / t.unit_time +1
-        n₁ = Int(floor(n))
-
-        if n₁ == n
-            return getindex(t.time_array, i, j, n₁)
-        end
-        n₂ = Int(n₁ + 1)
-
-        return getindex(t.time_array, i, j, n₁) * (n₂ - n) + getindex(t.time_array, i, j, n₂) * (n - n₁)
-    end
-end
-
-@inline getbc(bc::BC{<:Open,  <:TimeInterpolatedArray}, i::Integer, j::Integer, grid::AbstractGrid, clock, args...) = bc.condition[i, j, clock]
-@inline getbc(bc::BC{<:Value, <:TimeInterpolatedArray}, i::Integer, j::Integer, grid::AbstractGrid, clock, args...) = bc.condition[i, j, clock]
-
-function set_boundary_conditions(grid; Nt = 30)
+function set_boundary_conditions(grid; chunk_size = 10)
 
     Nx, Ny, Nz = size(grid)
     arch = architecture(grid)
 
     @show arch
-    u_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    u_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
-    u_south = arch_array(arch, zeros(Nx+1, Nz, Nt+1))
-    u_north = arch_array(arch, zeros(Nx+1, Nz, Nt+1))
+    u_west  = FieldTimeSeries("boundary_conditions.jld2", "u_west"; backend = InMemory(; chunk_size))
+    u_east  = FieldTimeSeries("boundary_conditions.jld2", "u_east"; backend = InMemory(; chunk_size))
+    u_south = FieldTimeSeries("boundary_conditions.jld2", "u_south"; backend = InMemory(c))
+    u_north = FieldTimeSeries("boundary_conditions.jld2", "u_north"; backend = InMemory(c))
 
     v_west  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
     v_east  = arch_array(arch, zeros(Ny+1, Nz, Nt+1))
@@ -68,28 +34,28 @@ function set_boundary_conditions(grid; Nt = 30)
     S_south = arch_array(arch, zeros(Nx, Nz, Nt+1))
     S_north = arch_array(arch, zeros(Nx, Nz, Nt+1))
 
-    u_west_bc  =  OpenBoundaryCondition(TimeInterpolatedArray(u_west,  1day))
-    u_east_bc  =  OpenBoundaryCondition(TimeInterpolatedArray(u_east,  1day))
-    u_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(u_south, 1day))
-    u_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(u_north, 1day))
+    u_west_bc  =  OpenBoundaryCondition(u_west )
+    u_east_bc  =  OpenBoundaryCondition(u_east )
+    u_south_bc = ValueBoundaryCondition(u_south)
+    u_north_bc = ValueBoundaryCondition(u_north)
     
-    v_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(v_west,  1day))
-    v_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(v_east,  1day))
-    v_south_bc =  OpenBoundaryCondition(TimeInterpolatedArray(v_south, 1day))
-    v_north_bc =  OpenBoundaryCondition(TimeInterpolatedArray(v_north, 1day))
+    v_west_bc  = ValueBoundaryCondition(v_west )
+    v_east_bc  = ValueBoundaryCondition(v_east )
+    v_south_bc =  OpenBoundaryCondition(v_south)
+    v_north_bc =  OpenBoundaryCondition(v_north)
     
     u_bcs = FieldBoundaryConditions(west = u_west_bc, east = u_east_bc, south = u_south_bc, north = u_north_bc)
     v_bcs = FieldBoundaryConditions(west = v_west_bc, east = v_east_bc, south = v_south_bc, north = v_north_bc)
 
-    T_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(T_west,  1day))
-    T_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(T_east,  1day))
-    T_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_north, 1day))
-    T_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(T_south, 1day))
+    T_west_bc  = ValueBoundaryCondition(T_west )
+    T_east_bc  = ValueBoundaryCondition(T_east )
+    T_south_bc = ValueBoundaryCondition(T_north)
+    T_north_bc = ValueBoundaryCondition(T_south)
     
-    S_west_bc  = ValueBoundaryCondition(TimeInterpolatedArray(S_west,  1day))
-    S_east_bc  = ValueBoundaryCondition(TimeInterpolatedArray(S_east,  1day))
-    S_south_bc = ValueBoundaryCondition(TimeInterpolatedArray(S_north, 1day))
-    S_north_bc = ValueBoundaryCondition(TimeInterpolatedArray(S_south, 1day))
+    S_west_bc  = ValueBoundaryCondition(S_west )
+    S_east_bc  = ValueBoundaryCondition(S_east )
+    S_south_bc = ValueBoundaryCondition(S_north)
+    S_north_bc = ValueBoundaryCondition(S_south)
 
     T_bcs = FieldBoundaryConditions(west = T_west_bc, east = T_east_bc, south = T_south_bc, north = T_north_bc)
     S_bcs = FieldBoundaryConditions(west = S_west_bc, east = S_east_bc, south = S_south_bc, north = S_north_bc)
@@ -143,10 +109,7 @@ function fill_boundaries!(var, data)
     return nothing
 end
 
-function update_boundary_conditions!(simulation)
-
-    u, v, w = simulation.model.velocities
-    T, S, c = simulation.model.tracers
+function setup_forcings_and_boundary_conditions!(grid; times = 1:1000)
 
     # Decide what filename to load based on the clock (at the beginning just one file so open that!)
 
@@ -154,10 +117,8 @@ function update_boundary_conditions!(simulation)
 
     #file = jldopen(filename)
 
-    Nx = 350 
-    Ny = 250
-    Nz = 175 
-    Nt = 30
+    Nx, Ny, Nz = size(grid)
+
      
     data_u_east  = arch_array(arch, zeros(Ny, Nz, Nt+1))
     data_u_west  = arch_array(arch, zeros(Ny, Nz, Nt+1))
@@ -181,48 +142,42 @@ function update_boundary_conditions!(simulation)
 
     data_u_east  = read_from_binary("data/RT_50thUvel_E"; Ny, Nz, Nt=Nt+1)
     data_u_west  = read_from_binary("data/RT_50thUvel_W"; Ny, Nz, Nt=Nt+1)
-    data_u_north = partition_array(arch, read_from_binary("data/RT_50thUvel_N";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
-    data_u_south = partition_array(arch, read_from_binary("data/RT_50thUvel_S";Nx=Nx,Nz=Nz,Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_u_north = partition_array(arch, read_from_binary("data/RT_50thUvel_N"; Nx=Nx, Nz=Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
+    data_u_south = partition_array(arch, read_from_binary("data/RT_50thUvel_S"; Nx=Nx, Nz=Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
 
     
     data_v_east  = read_from_binary("data/RT_50thVvel_E"; Ny, Nz, Nt=Nt+1)
     data_v_west  = read_from_binary("data/RT_50thVvel_W"; Ny, Nz, Nt=Nt+1)
-    data_v_north = partition_array(arch, read_from_binary("data/RT_50thVvel_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
-    data_v_south = partition_array(arch, read_from_binary("data/RT_50thVvel_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_v_north = partition_array(arch, read_from_binary("data/RT_50thVvel_N"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
+    data_v_south = partition_array(arch, read_from_binary("data/RT_50thVvel_S"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
 
 
     data_S_east  = read_from_binary("data/RT_50thTemp_E"; Ny, Nz, Nt=Nt+1)
     data_S_west  = read_from_binary("data/RT_50thTemp_W"; Ny, Nz, Nt=Nt+1)
-    data_S_north = partition_array(arch, read_from_binary("data/RT_50thTemp_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
-    data_S_south = partition_array(arch, read_from_binary("data/RT_50thTemp_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
+    data_S_north = partition_array(arch, read_from_binary("data/RT_50thTemp_N"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
+    data_S_south = partition_array(arch, read_from_binary("data/RT_50thTemp_S"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
 
 
-    data_T_east  = read_from_binary("data/RT_50thSalt_E"; Ny, Nz, Nt=Nt+1)
-    data_T_west  = read_from_binary("data/RT_50thSalt_W"; Ny, Nz, Nt=Nt+1)
-    data_T_north = partition_array(arch, read_from_binary("data/RT_50thSalt_N"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
-    data_T_south = partition_array(arch, read_from_binary("data/RT_50thSalt_S"; Nx, Nz, Nt=Nt+1), (Nx,Nz,Nt+1))
-
-    
+    data_T_east  = read_from_binary("data/RT_50thSalt_E"; Ny, Nz, Nt = Nt+1)
+    data_T_west  = read_from_binary("data/RT_50thSalt_W"; Ny, Nz, Nt = Nt+1)
+    data_T_north = partition_array(arch, read_from_binary("data/RT_50thSalt_N"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
+    data_T_south = partition_array(arch, read_from_binary("data/RT_50thSalt_S"; Nx, Nz, Nt=Nt+1), (Nx, Nz, Nt+1))
 
     # data_u_west = extract_west(partition(read_from_binary(....)))
     # data_u_east = extract_east(partition(read_from_binary(....)))
 
-
-
-
     #the function reallocate_uv extrapolated the center grid to the face grid
 
 
-     bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
-     bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_south)
-     bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_south)
-     bcs_S = (west = data_S_west,                       east = data_S_east,                         north=data_S_north,                         south=data_S_south)
+    bcs_u = (west = data_u_west,                       east = data_u_east,                         north=reallocate_uv(data_u_north;dim=1),    south=reallocate_uv(data_u_south;dim=1))
+    bcs_v = (west = reallocate_uv(data_v_west;dim=2),  east = reallocate_uv(data_v_east;dim=2),    north=data_v_north,                         south=data_v_south)
+    bcs_T = (west = data_T_west,                       east = data_T_east,                         north=data_T_north,                         south=data_T_south)
+    bcs_S = (west = data_S_west,                       east = data_S_east,                         north=data_S_north,                         south=data_S_south)
      
     fill_boundaries!(u, bcs_u)
     fill_boundaries!(v, bcs_v)
     fill_boundaries!(T, bcs_T)
     fill_boundaries!(S, bcs_S)
-
     
     # Better way:
     # Save all boundary conditions in .jld2 
@@ -234,22 +189,3 @@ function update_boundary_conditions!(simulation)
 
     return nothing
 end
-
-#= fill_forcing!(var, data) = copyto!(var.parameters.time_array, data)
-
-function update_forcing!(simulation)
-
-    @info "loading file $filename"
-
-    file = jldopen(filename)
-
-    fill_forcing!(model.forcing.u, file["u"])
-    fill_forcing!(model.forcing.v, file["v"])
-    fill_forcing!(model.forcing.T, file["T"])
-    fill_forcing!(model.forcing.S, file["S"])
-
-    GC.gc()
-
-    return nothing
-end
- =#

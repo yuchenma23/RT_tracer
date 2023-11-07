@@ -3,8 +3,6 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
 using Oceananigans.Architectures: device, CPU, GPU, array_type, arch_array
 using Oceananigans.ImmersedBoundaries: immersed_cell
 
-
-
 function read_from_binary_2d(filename, Nx, Ny)
     arr = zeros(Float32, Nx*Ny)
     read!(filename, arr)
@@ -12,7 +10,6 @@ function read_from_binary_2d(filename, Nx, Ny)
     return reshape(arr, Nx, Ny)
 
 end
-
 
 function grid_load_balance(arch, Nx, Ny, Nz, topo)
     
